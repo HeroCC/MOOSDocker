@@ -5,10 +5,10 @@ LABEL maintainer = Conlan Cesar <conlanc@gmail.com>
 SHELL ["/bin/bash", "-c"]
 
 # Bring image up to date
-RUN apt update -y && apt upgrade -y
+RUN apt-get update -y && apt-get upgrade -y
 
 # Install required MOOS dependencies
-RUN apt install -y cmake build-essential subversion libtiff5-dev libfltk1.3-dev freeglut3-dev libpng-dev libjpeg-dev libxinerama-dev libxft-dev libtiff5-dev
+RUN apt-get install -y cmake build-essential subversion git libtiff5-dev libfltk1.3-dev freeglut3-dev libpng-dev libjpeg-dev libxinerama-dev libxft-dev libtiff5-dev && apt-get clean
 
 # Make a user to run the MOOS apps
 RUN useradd -m -p "moos" moos && usermod -a -G sudo moos
@@ -27,4 +27,4 @@ RUN cd "$HOME/moos-ivp" && ./build.sh
 
 # Add MOOS variables to the env
 ENV PATH="/home/moos/moos-ivp/bin:${PATH}"
-ENV IVP_BEHAVIORS_DIRS="/home/moos/moos-ivp/lib"
+ENV IVP_BEHAVIOR_DIRS="/home/moos/moos-ivp/lib"
