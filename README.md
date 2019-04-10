@@ -20,6 +20,6 @@ $ docker run -t -i --net=moos --name=moos-ivp-aquaticus-{SHORESIDE,VEHICLE,ETC} 
 
 Then, ensure that the mission you are running has multicast enabled (or manually specify the IPs for your containers). For example, for the alpha mission shoreside run `cd moos-ivp-aquaticus/missions/alpha/ && vim meta_shoreside.moos` and uncomment the line that reads `input = route =  multicast_7` in pShare's ProcessConfig. On each vehicle, edit the `plug_uFldNodeBroker.moos` file and add the line `TRY_SHORE_HOST = pshare_route=multicast_7`.
 
-Finally, now that your missions are ready, you can launch your nodes (`./launch_shoreside.sh`, then `./launch_m200.sh -s` on each vehicle). Collect your logs, upload it to a mount or network location, and exit the container.
+Finally, now that your missions are ready, you can launch your nodes (`./launch_shoreside.sh`, then `./launch_m200.sh -s` on each vehicle). Note, these containers are not X11 forwarded, so GUI applications like pMarineViewer will fail to launch and may print a Run Warning. Collect your logs, upload them to a mount or network location, and exit the container.
 
 
