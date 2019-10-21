@@ -1,14 +1,11 @@
 FROM ubuntu:18.04
-LABEL maintainer = Conlan Cesar <conlanc@gmail.com>
+LABEL maintainer = Conlan Cesar <conlanc@csail.mit.edu>
 
 # Set the default shell to bash
 SHELL ["/bin/bash", "-c"]
 
-# Bring image up to date
-RUN apt-get update -y && apt-get upgrade -y
-
 # Install required MOOS dependencies
-RUN apt-get install -y cmake build-essential subversion git libtiff5-dev libfltk1.3-dev freeglut3-dev libpng-dev libjpeg-dev libxinerama-dev libxft-dev libtiff5-dev && apt-get clean
+RUN apt-get update -y && apt-get install -y cmake build-essential subversion git libtiff5-dev libfltk1.3-dev freeglut3-dev libpng-dev libjpeg-dev libxinerama-dev libxft-dev libtiff5-dev && apt-get clean
 
 # Make a user to run the MOOS apps
 RUN useradd -m -p "moos" moos && usermod -a -G sudo moos
