@@ -1,4 +1,9 @@
-# Example Scenario: Networked Docker containers for Shoreside & Heron
+# MOOSDocker
+An implementation of MOOS-IvP and moos-ivp-extend-like trees in Docker.
+
+## Example Scenarios:
+
+### Networked Docker containers for Shoreside & Heron
 
 Start off by building both images:
 
