@@ -6,13 +6,21 @@ services:
 stages:
   - build
   - test
-  - release
+  - deploy
 
 variables:
-  INDEV_IMAGE_NAME: $CI_REGISTRY_IMAGE:latest-indev
+  INDEV_IMAGE_NAME: $CI_REGISTRY_IMAGE:trunk-indev
 
 before_script:
   - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+
+.before_script_template: &deploy_prep
+  except:
+    - merge_requests
+    - external_pull_requests
+  before_script:
+    - docker pull $INDEV_IMAGE_NAME
+    - SVN_REV="r$(docker run $INDEV_IMAGE_NAME svn info --show-item revision moos-ivp)" && export SVN_REV
 
 build-ivp:
   stage: build
@@ -30,5 +38,22 @@ test-build-check:
     - docker pull $INDEV_IMAGE_NAME
     - docker run $INDEV_IMAGE_NAME moos-ivp/build-check.sh
 
+deploy-gitlab-registry:
+  stage: deploy
+  <<: *deploy_prep
+  script:
+    - docker push $INDEV_IMAGE_NAME $CI_REGISTRY_NAME:${SVN_REV}
+    - docker push $INDEV_IMAGE_NAME $CI_REGISTRY_NAME:trunk
+
+deploy-docker-hub-registry:
+  stage: deploy
+  <<: *deploy_prep
+  variables:
+    DOCKER_HUB_REPO_PATH: docker.io/moosivp/moos-ivp
+  script:
+    - docker login --user $DOCKER_HUB_USERNAME -p $DOCKER_HUB_PUSH_KEY docker.io
+    - docker push $INDEV_IMAGE_NAME ${DOCKER_HUB_REPO_PATH}:${SVN_REV}
+    - docker push $INDEV_IMAGE_NAME ${DOCKER_HUB_REPO_PATH}:trunk
+
+
 # TODO MOOS Unit Tests
-# TODO Deploy to GitLab CI & Docker Hub
