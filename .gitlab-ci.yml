@@ -19,10 +19,10 @@ build-ivp:
   script:
     # Some of this can be simplified when moving MOOS-IvP to git and when the Dockerfile is embeded in the main moos-ivp
     - docker build -t $INDEV_IMAGE_NAME ./docker/moos-ivp
-    - export SVN_REV="r$(docker run $INDEV_IMAGE_NAME:latest-indev svn info --show-item revision moos-ivp)" && echo "$SVN_REV"
-    - docker tag $INDEV_IMAGE_NAME $CI_REGISTRY_NAME:${SVN_REV}-indev
+    - read SVN_REV < <(echo -n "r" && docker run $INDEV_IMAGE_NAME svn info --show-item revision moos-ivp) && echo "$SVN_REV"
+    - docker tag $INDEV_IMAGE_NAME $CI_REGISTRY_IMAGE:${SVN_REV}-indev
     - docker push $INDEV_IMAGE_NAME
-    - docker push $CI_REGISTRY_NAME:${SVN_REV}-indev
+    - docker push $CI_REGISTRY_IMAGE:${SVN_REV}-indev
 
 test-build-check:
   stage: test
