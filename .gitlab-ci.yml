@@ -42,10 +42,10 @@ deploy-gitlab-registry:
   stage: deploy
   <<: *deploy_prep
   script:
-    - docker tag $INDEV_IMAGE_NAME $CI_REGISTRY_NAME:${SVN_REV}
-    - docker tag $INDEV_IMAGE_NAME $CI_REGISTRY_NAME:trunk
-    - docker push $CI_REGISTRY_NAME:${SVN_REV}
-    - docker push $CI_REGISTRY_NAME:trunk
+    - docker tag $INDEV_IMAGE_NAME $CI_REGISTRY_IMAGE:${SVN_REV}
+    - docker tag $INDEV_IMAGE_NAME $CI_REGISTRY_IMAGE:trunk
+    - docker push $CI_REGISTRY_IMAGE:${SVN_REV}
+    - docker push $CI_REGISTRY_IMAGE:trunk
 
 deploy-docker-hub-registry:
   stage: deploy
