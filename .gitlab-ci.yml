@@ -42,8 +42,10 @@ deploy-gitlab-registry:
   stage: deploy
   <<: *deploy_prep
   script:
-    - docker push $INDEV_IMAGE_NAME $CI_REGISTRY_NAME:${SVN_REV}
-    - docker push $INDEV_IMAGE_NAME $CI_REGISTRY_NAME:trunk
+    - docker tag $INDEV_IMAGE_NAME $CI_REGISTRY_NAME:${SVN_REV}
+    - docker tag $INDEV_IMAGE_NAME $CI_REGISTRY_NAME:trunk
+    - docker push $CI_REGISTRY_NAME:${SVN_REV}
+    - docker push $CI_REGISTRY_NAME:trunk
 
 deploy-docker-hub-registry:
   stage: deploy
@@ -51,9 +53,11 @@ deploy-docker-hub-registry:
   variables:
     DOCKER_HUB_REPO_PATH: docker.io/moosivp/moos-ivp
   script:
-    - docker login --user $DOCKER_HUB_USERNAME -p $DOCKER_HUB_PUSH_KEY docker.io
-    - docker push $INDEV_IMAGE_NAME ${DOCKER_HUB_REPO_PATH}:${SVN_REV}
-    - docker push $INDEV_IMAGE_NAME ${DOCKER_HUB_REPO_PATH}:trunk
+    - docker login --username $DOCKER_HUB_USERNAME --password $DOCKER_HUB_PUSH_KEY docker.io
+    - docker tag $INDEV_IMAGE_NAME ${DOCKER_HUB_REPO_PATH}:${SVN_REV}
+    - docker tag $INDEV_IMAGE_NAME ${DOCKER_HUB_REPO_PATH}:trunk
+    - docker push ${DOCKER_HUB_REPO_PATH}:${SVN_REV}
+    - docker push ${DOCKER_HUB_REPO_PATH}:trunk
 
 
 # TODO MOOS Unit Tests
