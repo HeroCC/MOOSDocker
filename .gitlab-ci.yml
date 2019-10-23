@@ -5,6 +5,11 @@ services:
 
 stages:
   - build
+  - test
+  - release
+
+variables:
+  INDEV_IMAGE_NAME: $CI_REGISTRY_NAME:latest-indev
 
 before_script:
   - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
@@ -12,6 +17,18 @@ before_script:
 build-ivp:
   stage: build
   script:
-    - docker build -t $CI_REGISTRY_IMAGE:testing ./docker/moos-ivp
-    - docker push $CI_REGISTRY_IMAGE:testing
+    # Some of this can be simplified when moving MOOS-IvP to git and when the Dockerfile is embeded in the main moos-ivp
+    - docker build -t $INDEV_IMAGE_NAME ./docker/moos-ivp
+    - export SVN_REV="r${docker run $INDEV_IMAGE_NAME:latest-indev svn info --show-item revision moos-ivp}" && echo "$SVN_REV"
+    - docker tag $INDEV_IMAGE_NAME $CI_REGISTRY_NAME:${SVN_REV}-indev
+    - docker push $INDEV_IMAGE_NAME
+    - docker push $CI_REGISTRY_NAME:${SVN_REV}-indev
 
+test-build-check:
+  stage: test
+  script:
+    - docker pull $INDEV_IMAGE_NAME
+    - docker run $INDEV_IMAGE_NAME moos-ivp/build-check.sh
+
+# TODO MOOS Unit Tests
+# TODO Deploy to GitLab CI & Docker Hub
