@@ -41,6 +41,13 @@ test-build-check:
     - docker pull $INDEV_IMAGE_NAME
     - docker run $INDEV_IMAGE_NAME moos-ivp/build-check.sh || true
 
+test-unit-tests:
+  stage: test
+  script:
+    - docker pull $INDEV_IMAGE_NAME
+    - docker run $INDEV_IMAGE_NAME /bin/bash -c 'moos-ivp/build-utests.sh && cd moos-ivp/ivp/src_unit_tests && ./alltest.sh || true'
+
+
 deploy-gitlab-registry:
   stage: deploy
   <<: *deploy_prep
