@@ -1,7 +1,8 @@
 image: docker:stable
 
 services:
-  - docker:dind
+  - docker:stable
+    command: ["--experimental"]
 
 stages:
   - build
@@ -29,10 +30,9 @@ build-ivp:
   stage: build
   script:
     # Some of this can be simplified when moving MOOS-IvP to git and when the Dockerfile is embeded in the main moos-ivp
-    - docker build -t $INDEV_IMAGE_NAME ./docker/moos-ivp
+    - DOCKER_CLI_EXPERIMENTAL=enabled docker buildx build --platform linux/amd64,linux/arm64,linux/arm/v7 -t $INDEV_IMAGE_NAME --push ./docker/moos-ivp
     - SVN_REV="r$(docker run $INDEV_IMAGE_NAME svn info --show-item revision moos-ivp)" && export SVN_REV && echo "$SVN_REV"
     - docker tag $INDEV_IMAGE_NAME $CI_REGISTRY_IMAGE:${SVN_REV}-indev
-    - docker push $INDEV_IMAGE_NAME
     - docker push $CI_REGISTRY_IMAGE:${SVN_REV}-indev
 
 test-build-check:
@@ -70,5 +70,3 @@ deploy-docker-hub-registry:
     - docker push ${DOCKER_HUB_REPO_PATH}:${SVN_REV}
     - docker push ${DOCKER_HUB_REPO_PATH}:trunk
 
-
-# TODO MOOS Unit Tests
