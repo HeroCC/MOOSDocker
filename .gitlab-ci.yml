@@ -1,7 +1,7 @@
-image: docker:19
+image: docker:stable
 
 services:
-  - docker:19-dind
+  - docker:dind
 
 stages:
   - build
