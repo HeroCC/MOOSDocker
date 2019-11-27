@@ -10,7 +10,6 @@ stages:
 
 variables:
   INDEV_IMAGE_NAME: $CI_REGISTRY_IMAGE:trunk-indev
-  DOCKER_CLI_EXPERIMENTAL: enabled
 
 before_script:
   - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
@@ -30,7 +29,7 @@ build-ivp:
   stage: build
   script:
     # Some of this can be simplified when moving MOOS-IvP to git and when the Dockerfile is embeded in the main moos-ivp
-    - docker buildx build --platform linux/amd64,linux/arm64,linux/arm/v7 -t $INDEV_IMAGE_NAME ./docker/moos-ivp
+    - docker build -t $INDEV_IMAGE_NAME ./docker/moos-ivp
     - SVN_REV="r$(docker run $INDEV_IMAGE_NAME svn info --show-item revision moos-ivp)" && export SVN_REV && echo "$SVN_REV"
     - docker tag $INDEV_IMAGE_NAME $CI_REGISTRY_IMAGE:${SVN_REV}-indev
     - docker push $INDEV_IMAGE_NAME
@@ -71,3 +70,5 @@ deploy-docker-hub-registry:
     - docker push ${DOCKER_HUB_REPO_PATH}:${SVN_REV}
     - docker push ${DOCKER_HUB_REPO_PATH}:trunk
 
+
+# TODO MOOS Unit Tests
