@@ -1,0 +1,7 @@
+terminal:
+  image: docker:stable
+  services:
+    - docker:dind
+  before_script:
+    - apt-get update
+  script: sleep 60
