@@ -57,8 +57,6 @@ deploy-gitlab-registry:
     REGISTRY_USER: "$CI_REGISTRY_USER"
     REGISTRY_PASSWD: "$CI_REGISTRY_PASSWORD"
     REPO_PATH: "$CI_REGISTRY_IMAGE"
-    INDEV_IMAGE_NAME: $INDEV_IMAGE_NAME 
-    # Don't override the global variable $INDEV_IMAGE_NAME
   <<: *deploy_generic
 
 deploy-docker-hub-registry:
@@ -68,5 +66,4 @@ deploy-docker-hub-registry:
     REGISTRY_USER: "$DOCKER_HUB_USERNAME"
     REGISTRY_PASSWD: "$DOCKER_HUB_PUSH_KEY"
     REPO_PATH: "${REGISTRY_URL}/moosivp/moos-ivp"
-    INDEV_IMAGE_NAME: $INDEV_IMAGE_NAME
   <<: *deploy_generic
