@@ -14,16 +14,18 @@ variables:
 before_script:
   - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
 
-.before_script_template: &deploy_prep
-  variables:
-    # Deploy doesn't need access to source git repo
-    GIT_STRATEGY: none
+.before_script_template: &deploy_generic
   except:
     - merge_requests
     - external_pull_requests
-  before_script:
+  script:
     - docker pull $INDEV_IMAGE_NAME
     - SVN_REV="r$(docker run $INDEV_IMAGE_NAME svn info --show-item revision moos-ivp)" && export SVN_REV
+    - docker login --username $REGISTRY_USER --password $REGISTRY_PASSWD $REGISTRY_URL
+    - docker tag $INDEV_IMAGE_NAME ${REPO_PATH}:${SVN_REV}
+    - docker tag $INDEV_IMAGE_NAME ${REPO_PATH}:trunk
+    - docker push ${REPO_PATH}:${SVN_REV}
+    - docker push ${REPO_PATH}:trunk
 
 build-ivp:
   stage: build
@@ -50,25 +52,21 @@ test-unit-tests:
 
 deploy-gitlab-registry:
   stage: deploy
-  <<: *deploy_prep
-  script:
-    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY # deploy_prep overrides this from global
-    - docker tag $INDEV_IMAGE_NAME $CI_REGISTRY_IMAGE:${SVN_REV}
-    - docker tag $INDEV_IMAGE_NAME $CI_REGISTRY_IMAGE:trunk
-    - docker push $CI_REGISTRY_IMAGE:${SVN_REV}
-    - docker push $CI_REGISTRY_IMAGE:trunk
+  variables:
+    REGISTRY_URL: "$CI_REGISTRY"
+    REGISTRY_USER: "$CI_REGISTRY_USER"
+    REGISTRY_PASSWD: "$CI_REGISTRY_PASSWORD"
+    REPO_PATH: "$CI_REGISTRY_IMAGE"
+    INDEV_IMAGE_NAME: $INDEV_IMAGE_NAME 
+    # Don't override the global variable $INDEV_IMAGE_NAME
+  <<: *deploy_generic
 
 deploy-docker-hub-registry:
   stage: deploy
-  <<: *deploy_prep
   variables:
-    DOCKER_HUB_REPO_PATH: docker.io/moosivp/moos-ivp
-  script:
-    - docker login --username $DOCKER_HUB_USERNAME --password $DOCKER_HUB_PUSH_KEY docker.io
-    - docker tag $INDEV_IMAGE_NAME ${DOCKER_HUB_REPO_PATH}:${SVN_REV}
-    - docker tag $INDEV_IMAGE_NAME ${DOCKER_HUB_REPO_PATH}:trunk
-    - docker push ${DOCKER_HUB_REPO_PATH}:${SVN_REV}
-    - docker push ${DOCKER_HUB_REPO_PATH}:trunk
-
-
-# TODO MOOS Unit Tests
+    REGISTRY_URL: "docker.io"
+    REGISTRY_USER: "$DOCKER_HUB_USERNAME"
+    REGISTRY_PASSWD: "$DOCKER_HUB_PUSH_KEY"
+    REPO_PATH: "${REGISTRY_URL}/moosivp/moos-ivp"
+    INDEV_IMAGE_NAME: $INDEV_IMAGE_NAME
+  <<: *deploy_generic
