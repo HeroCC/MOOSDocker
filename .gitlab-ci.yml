@@ -14,12 +14,9 @@ variables:
 
 # Prepare
 .install_buildx_template: &install_buildx
-  services:
-    - docker:dind
-    - name: multiarch/qemu-user-static:register
-      command: ["--reset"]
   before_script:
     # Thanks https://gitlab.com/com.hillnz.docker/docker-buildx-qemu/blob/master/Dockerfile
+    - docker run --rm --privileged multiarch/qemu-user-static:register --reset
     - mkdir -p ~/.docker/cli-plugins
     - |
       wget -O - https://api.github.com/repos/docker/buildx/releases/latest | \
@@ -36,7 +33,7 @@ build-ivp:
   <<: *install_buildx
   script:
     # Some of this can be simplified when moving MOOS-IvP to git and when the Dockerfile is embeded in the main moos-ivp
-    - docker buildx build --platform "${BUILD_ARCHS}" -t $INDEV_IMAGE_NAME ./docker/moos-ivp
+    - docker buildx build --load --platform "${BUILD_ARCHS}" -t $INDEV_IMAGE_NAME ./docker/moos-ivp
     - SVN_REV="r$(docker run --rm $INDEV_IMAGE_NAME svn info --show-item revision moos-ivp)" && export SVN_REV && echo "$SVN_REV"
     - docker tag $INDEV_IMAGE_NAME $CI_REGISTRY_IMAGE:${SVN_REV}-indev
     - echo "$CI_REGISTRY_PASSWORD" | docker login -u $CI_REGISTRY_USER --password-stdin $CI_REGISTRY
