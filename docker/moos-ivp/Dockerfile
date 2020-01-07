@@ -1,4 +1,4 @@
-FROM ubuntu:18.04
+FROM --platform=$BUILDPLATFORM ubuntu:18.04
 LABEL maintainer = Conlan Cesar <conlanc@csail.mit.edu>
 
 # Set the default shell to bash
