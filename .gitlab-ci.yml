@@ -10,7 +10,7 @@ stages:
 
 variables:
   INDEV_IMAGE_NAME: $CI_REGISTRY_IMAGE:trunk-indev
-  BUILD_ARCHS: "linux/amd64,linux/arm64,linux/arm/v7"
+  BUILD_ARCHS: "linux/amd64,linux/arm64"
 
 # Prepare
 .install_buildx_template: &install_buildx
@@ -23,7 +23,7 @@ variables:
       grep "browser_download_url.*linux-amd64" | cut -d : -f 2,3 | tr -d \" | \
       xargs wget -O ~/.docker/cli-plugins/docker-buildx && \
       chmod a+x ~/.docker/cli-plugins/docker-buildx
-    - docker buildx create --driver docker-container --use
+    - docker buildx create --use
     - docker buildx inspect --bootstrap
 
 
