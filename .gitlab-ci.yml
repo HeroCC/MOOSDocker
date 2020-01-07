@@ -16,7 +16,7 @@ variables:
 .install_buildx_template: &install_buildx
   services:
     - docker:dind
-    - multiarch/qemu-user-static:register
+    - name: multiarch/qemu-user-static:register
       command: ["--reset"]
   before_script:
     # Thanks https://gitlab.com/com.hillnz.docker/docker-buildx-qemu/blob/master/Dockerfile
