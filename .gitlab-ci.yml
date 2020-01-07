@@ -9,8 +9,8 @@ stages:
   - deploy
 
 variables:
-  INDEV_IMAGE_NAME: $CI_REGISTRY_IMAGE:trunk-indev
-  BUILD_ARCHS: "linux/amd64,linux/arm64"
+  INDEV_IMAGE_NAME: $CI_REGISTRY_IMAGE:trunk-indev_CI-${CI_COMMIT_REF_NAME}
+  BUILD_ARCHS: "linux/amd64,linux/arm64,linux/arm/v7"
 
 # Prepare
 .install_buildx_template: &install_buildx
