@@ -33,25 +33,30 @@ build-ivp:
   <<: *install_buildx
   script:
     # Some of this can be simplified when moving MOOS-IvP to git and when the Dockerfile is embeded in the main moos-ivp
-    - docker buildx build --load --platform "${BUILD_ARCHS}" -t $INDEV_IMAGE_NAME ./docker/moos-ivp
+    - echo "$CI_REGISTRY_PASSWORD" | docker login -u $CI_REGISTRY_USER --password-stdin $CI_REGISTRY
+    - docker buildx build --push --platform "${BUILD_ARCHS}" -t $INDEV_IMAGE_NAME ./docker/moos-ivp
     - SVN_REV="r$(docker run --rm $INDEV_IMAGE_NAME svn info --show-item revision moos-ivp)" && export SVN_REV && echo "$SVN_REV"
     - docker tag $INDEV_IMAGE_NAME $CI_REGISTRY_IMAGE:${SVN_REV}-indev
-    - echo "$CI_REGISTRY_PASSWORD" | docker login -u $CI_REGISTRY_USER --password-stdin $CI_REGISTRY
-    - docker push $INDEV_IMAGE_NAME
     - docker push $CI_REGISTRY_IMAGE:${SVN_REV}-indev
 
 # Test
 test-build-check:
+  image: "$INDEV_IMAGE_NAME"
   stage: test
+  allow_failure: true
   script:
-    - docker pull $INDEV_IMAGE_NAME
-    - docker run $INDEV_IMAGE_NAME moos-ivp/build-check.sh || true
+    - cd moos-ivp/
+    - build-check.sh
 
 test-unit-tests:
+  image: "$INDEV_IMAGE_NAME"
   stage: test
+  allow_failure: true
   script:
-    - docker pull $INDEV_IMAGE_NAME
-    - docker run $INDEV_IMAGE_NAME /bin/bash -c 'moos-ivp/build-utests.sh && cd moos-ivp/ivp/src_unit_tests && ./alltest.sh || true'
+    - cd moos-ivp/ 
+    - ./build-utests.sh
+    - cd ivp/src_unit_tests 
+    - ./alltest.sh
 
 # Deploy
 .before_script_template: &deploy_generic
