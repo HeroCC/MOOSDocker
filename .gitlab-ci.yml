@@ -1,4 +1,4 @@
-image: docker:stable
+image: jonoh/docker-buildx-qemu@sha256:4fc5868d90c146563dace436cb1b850c2bd8055ff2e7d9d53fb4a83a7dc2969e
 
 services:
   - docker:dind
@@ -15,14 +15,7 @@ variables:
 # Prepare
 .install_buildx_template: &install_buildx
   before_script:
-    # Thanks https://gitlab.com/com.hillnz.docker/docker-buildx-qemu/blob/master/Dockerfile
-    - docker run --rm --privileged multiarch/qemu-user-static:register --reset
-    - mkdir -p ~/.docker/cli-plugins
-    - |
-      wget -O - https://api.github.com/repos/docker/buildx/releases/latest | \
-      grep "browser_download_url.*linux-amd64" | cut -d : -f 2,3 | tr -d \" | \
-      xargs wget -O ~/.docker/cli-plugins/docker-buildx && \
-      chmod a+x ~/.docker/cli-plugins/docker-buildx
+    - update-binfmts --enable
     - docker buildx create --use
     - docker buildx inspect --bootstrap
 
