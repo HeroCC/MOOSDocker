@@ -10,9 +10,10 @@ stages:
 
 variables:
   DOCKER_HOST: tcp://docker:2375/
+  DEFAULT_NICE_ARCH: "amd64" # ensure this arch exists for tests and grabbing SVN_REV
   INDEV_IMAGE_TAG: "trunk-indev"
   INDEV_IMAGE_REGISTRY: "${CI_REGISTRY_IMAGE}/${CI_PIPELINE_ID}"
-  INDEV_IMAGE_NAME: "${INDEV_IMAGE_REGISTRY}:${INDEV_IMAGE_TAG}"
+  INDEV_IMAGE_NAME: "${INDEV_IMAGE_REGISTRY}/${DEFAULT_ARCH}:${INDEV_IMAGE_TAG}"
 
 # Build
 .install_buildx_template: &build_generic
@@ -22,24 +23,27 @@ variables:
     - docker buildx create --use
     - docker buildx inspect --bootstrap
     - echo "$CI_REGISTRY_PASSWORD" | docker login -u $CI_REGISTRY_USER --password-stdin $CI_REGISTRY
-    - docker buildx build --push --platform "${BUILD_ARCH}" -t "${INDEV_IMAGE_REGISTRY}/${BUILD_ARCH}:${INDEV_IMAGE_TAG}" ./docker/moos-ivp
+    - docker buildx build --push --platform "${BUILD_ARCH}" -t "${INDEV_IMAGE_REGISTRY}/${BUILD_ARCH_NICE}:${INDEV_IMAGE_TAG}" ./docker/moos-ivp
 
 build-ivp:amd64:
   timeout: 1h
   variables:
     BUILD_ARCH: linux/amd64
+    BUILD_ARCH_NICE: "amd64"
   <<: *build_generic
 
 build-ivp:arm64:
   timeout: 3h
   variables:
     BUILD_ARCH: linux/arm64
+    BUILD_ARCH_NICE: "arm64"
   <<: *build_generic
 
 build-ivp:armv7:
   timeout: 3h
   variables:
     BUILD_ARCH: linux/arm/v7
+    BUILD_ARCH_NICE: "armv7"
   <<: *build_generic
     
 # Test
@@ -68,7 +72,6 @@ test-unit-tests:
     - merge_requests
     - external_pull_requests
   script:
-    - docker pull $INDEV_IMAGE_NAME
     - SVN_REV="r$(docker run --rm $INDEV_IMAGE_NAME svn info --show-item revision moos-ivp)" && export SVN_REV
     - echo "$REGISTRY_PASSWD" | docker login --username $REGISTRY_USER --password-stdin $REGISTRY_URL
     - docker tag $INDEV_IMAGE_NAME ${REPO_PATH}:${SVN_REV}
@@ -82,7 +85,6 @@ test-unit-tests:
     - merge_requests
     - external_pull_requests
   script:
-    - docker pull $INDEV_IMAGE_NAME
     - export SVN_REV="r$(docker run --rm $INDEV_IMAGE_NAME svn info --show-item revision moos-ivp)" && echo $SVN_REV
     - export CI_MANIFEST_LIST="${INDEV_IMAGE_REGISTRY}/linux/amd64:${INDEV_IMAGE_TAG} ${INDEV_IMAGE_REGISTRY}/linux/arm64:${INDEV_IMAGE_TAG} ${INDEV_IMAGE_REGISTRY}/linux/arm/v7:${INDEV_IMAGE_TAG}" && echo "$CI_MANIFEST_LIST"
     - export DOCKER_CLI_EXPERIMENTAL=enabled
