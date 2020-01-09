@@ -10,7 +10,9 @@ stages:
 
 variables:
   DOCKER_HOST: tcp://docker:2375/
-  INDEV_IMAGE_NAME: "${CI_REGISTRY_IMAGE}:trunk-indev_CI-${CI_PIPELINE_ID}"
+  INDEV_IMAGE_TAG: "trunk-indev"
+  INDEV_IMAGE_REGISTRY: "${CI_REGISTRY_IMAGE}/${CI_PIPELINE_ID}"
+  INDEV_IMAGE_NAME: "${INDEV_IMAGE_REGISTRY}:${INDEV_IMAGE_TAG}"
 
 # Build
 .install_buildx_template: &build_generic
@@ -20,22 +22,21 @@ variables:
     - docker buildx create --use
     - docker buildx inspect --bootstrap
     - echo "$CI_REGISTRY_PASSWORD" | docker login -u $CI_REGISTRY_USER --password-stdin $CI_REGISTRY
-    - docker buildx build --push --platform "${BUILD_ARCH}" -t "${INDEV_IMAGE_NAME}-${CI_JOB_ID}" ./docker/moos-ivp
-    - docker buildx imagetools create --append -t "${INDEV_IMAGE_NAME}-${CI_JOB_ID}" "${INDEV_IMAGE_NAME}"
+    - docker buildx build --push --platform "${BUILD_ARCH}" -t "${INDEV_IMAGE_REGISTRY}/${BUILD_ARCH}:${INDEV_IMAGE_TAG}" ./docker/moos-ivp
 
-build-ivp-amd64:
+build-ivp:amd64:
   timeout: 1h
   variables:
     BUILD_ARCH: linux/amd64
   <<: *build_generic
 
-build-ivp-arm64:
+build-ivp:arm64:
   timeout: 3h
   variables:
     BUILD_ARCH: linux/arm64
   <<: *build_generic
 
-build-ivp-armv7:
+build-ivp:armv7:
   timeout: 3h
   variables:
     BUILD_ARCH: linux/arm/v7
@@ -62,6 +63,7 @@ test-unit-tests:
 
 # Deploy
 .before_script_template: &deploy_generic
+  stage: deploy
   except:
     - merge_requests
     - external_pull_requests
@@ -74,24 +76,38 @@ test-unit-tests:
     - docker push ${REPO_PATH}:${SVN_REV}
     - docker push ${REPO_PATH}:trunk
 
-deploy-gitlab-registry:
+.deploy_generic_manifest: &deploy_generic_manifest
   stage: deploy
+  except:
+    - merge_requests
+    - external_pull_requests
+  script:
+    - docker pull $INDEV_IMAGE_NAME
+    - export SVN_REV="r$(docker run --rm $INDEV_IMAGE_NAME svn info --show-item revision moos-ivp)" && echo $SVN_REV
+    - export CI_MANIFEST_LIST="${INDEV_IMAGE_REGISTRY}/linux/amd64:${INDEV_IMAGE_TAG} ${INDEV_IMAGE_REGISTRY}/linux/arm64:${INDEV_IMAGE_TAG} ${INDEV_IMAGE_REGISTRY}/linux/arm/v7:${INDEV_IMAGE_TAG}" && echo "$CI_MANIFEST_LIST"
+    - export DOCKER_CLI_EXPERIMENTAL=enabled
+    - docker manifest create ${REPO_PATH}:${SVN_REV} $CI_MANIFEST_LIST
+    - docker manifest create ${REPO_PATH}:latest $CI_MANIFEST_LIST
+    - echo "$REGISTRY_PASSWD" | docker login --username $REGISTRY_USER --password-stdin $REGISTRY_URL
+    - docker manifest push ${REPO_PATH}:${SVN_REV}
+    - docker manifest push ${REPO_PATH}:latest
+
+deploy-gitlab-registry:
   variables:
     REGISTRY_URL: "$CI_REGISTRY"
     REGISTRY_USER: "$CI_REGISTRY_USER"
     REGISTRY_PASSWD: "$CI_REGISTRY_PASSWORD"
     REPO_PATH: "$CI_REGISTRY_IMAGE"
-  <<: *deploy_generic
+  <<: *deploy_generic_manifest
 
 deploy-docker-hub-registry:
   only:
     refs:
       - master
       - schedules
-  stage: deploy
   variables:
     REGISTRY_URL: "docker.io"
     REGISTRY_USER: "$DOCKER_HUB_USERNAME"
     REGISTRY_PASSWD: "$DOCKER_HUB_PUSH_KEY"
     REPO_PATH: "${REGISTRY_URL}/moosivp/moos-ivp"
-  <<: *deploy_generic
+  <<: *deploy_generic_manifest
