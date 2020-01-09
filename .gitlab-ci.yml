@@ -11,18 +11,19 @@ stages:
 variables:
   DOCKER_HOST: tcp://docker:2375/
   INDEV_IMAGE_NAME: $CI_REGISTRY_IMAGE:trunk-indev_CI-${CI_PIPELINE_ID}
-  BUILD_ARCHS: "linux/amd64,linux/arm64,linux/arm/v7"
 
 # Build
 .install_buildx_template: &build_generic
   stage: build
+  variables:
+    INDEV_IMAGE_CI_NAME: "${INDEV_IMAGE_NAME}-${CI_JOB_ID}"
   script:
     - update-binfmts --enable
     - docker buildx create --use
     - docker buildx inspect --bootstrap
     - echo "$CI_REGISTRY_PASSWORD" | docker login -u $CI_REGISTRY_USER --password-stdin $CI_REGISTRY
-    - docker buildx build --load --platform "${BUILD_ARCH}" -t "${INDEV_IMAGE_NAME}-${CI_JOB_ID}" ./docker/moos-ivp
-    - docker buildx imagetools create --append -t "${INDEV_IMAGE_NAME}" "${INDEV_IMAGE_NAME}-${CI_JOB_ID}"
+    - docker buildx build --push --platform "${BUILD_ARCH}" -t "${INDEV_IMAGE_CI_NAME}" ./docker/moos-ivp
+    - docker buildx imagetools create --append -t "${INDEV_IMAGE_NAME}" "${INDEV_IMAGE_CI_NAME}"
 
 build-ivp-amd64:
   timeout: 1h
