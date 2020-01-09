@@ -10,7 +10,7 @@ stages:
 
 variables:
   DOCKER_HOST: tcp://docker:2375/
-  INDEV_IMAGE_NAME: $CI_REGISTRY_IMAGE:trunk-indev_CI-${CI_PIPELINE_ID}
+  INDEV_IMAGE_NAME: "${CI_REGISTRY_IMAGE}:trunk-indev_CI-${CI_PIPELINE_ID}"
   INDEV_IMAGE_CI_NAME: "${INDEV_IMAGE_NAME}-${CI_JOB_ID}"
 
 # Build
