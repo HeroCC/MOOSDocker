@@ -21,7 +21,7 @@ variables:
     - docker buildx inspect --bootstrap
     - echo "$CI_REGISTRY_PASSWORD" | docker login -u $CI_REGISTRY_USER --password-stdin $CI_REGISTRY
     - docker buildx build --push --platform "${BUILD_ARCH}" -t "${INDEV_IMAGE_NAME}-${CI_JOB_ID}" ./docker/moos-ivp
-    - docker buildx imagetools create --append -t "${INDEV_IMAGE_NAME}" "${INDEV_IMAGE_NAME}-${CI_JOB_ID}"
+    - docker buildx imagetools create --append -t "${INDEV_IMAGE_NAME}-${CI_JOB_ID}" "${INDEV_IMAGE_NAME}"
 
 build-ivp-amd64:
   timeout: 1h
