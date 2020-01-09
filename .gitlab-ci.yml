@@ -11,7 +11,6 @@ stages:
 variables:
   DOCKER_HOST: tcp://docker:2375/
   INDEV_IMAGE_NAME: "${CI_REGISTRY_IMAGE}:trunk-indev_CI-${CI_PIPELINE_ID}"
-  INDEV_IMAGE_CI_NAME: "${INDEV_IMAGE_NAME}-${CI_JOB_ID}"
 
 # Build
 .install_buildx_template: &build_generic
@@ -21,8 +20,8 @@ variables:
     - docker buildx create --use
     - docker buildx inspect --bootstrap
     - echo "$CI_REGISTRY_PASSWORD" | docker login -u $CI_REGISTRY_USER --password-stdin $CI_REGISTRY
-    - docker buildx build --push --platform "${BUILD_ARCH}" -t "${INDEV_IMAGE_CI_NAME}" ./docker/moos-ivp
-    - docker buildx imagetools create --append -t "${INDEV_IMAGE_NAME}" "${INDEV_IMAGE_CI_NAME}"
+    - docker buildx build --push --platform "${BUILD_ARCH}" -t "${INDEV_IMAGE_NAME}-${CI_JOB_ID}" ./docker/moos-ivp
+    - docker buildx imagetools create --append -t "${INDEV_IMAGE_NAME}" "${INDEV_IMAGE_NAME}-${CI_JOB_ID}"
 
 build-ivp-amd64:
   timeout: 1h
