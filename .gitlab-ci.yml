@@ -10,10 +10,9 @@ stages:
 
 variables:
   DOCKER_HOST: tcp://docker:2375/
-  DEFAULT_NICE_ARCH: "amd64" # ensure this arch exists for tests and grabbing SVN_REV
-  INDEV_IMAGE_TAG: "trunk-indev_CI-${CI_PIPELINE_ID}"
+  INDEV_IMAGE_TAG: "trunk_CI-${CI_PIPELINE_ID}"
   INDEV_IMAGE_REGISTRY: "${CI_REGISTRY_IMAGE}/indev"
-  INDEV_IMAGE_NAME: "${INDEV_IMAGE_REGISTRY}/${DEFAULT_ARCH}:${INDEV_IMAGE_TAG}"
+  INDEV_IMAGE_NAME: "${INDEV_IMAGE_REGISTRY}:${INDEV_IMAGE_TAG}"
 
 # Build
 .install_buildx_template: &build_generic
@@ -23,7 +22,15 @@ variables:
     - docker buildx create --use
     - docker buildx inspect --bootstrap
     - echo "$CI_REGISTRY_PASSWORD" | docker login -u $CI_REGISTRY_USER --password-stdin $CI_REGISTRY
-    - docker buildx build --push --platform "${BUILD_ARCH}" -t "${INDEV_IMAGE_REGISTRY}:${INDEV_IMAGE_TAG}-${BUILD_ARCH_NICE}" ./docker/moos-ivp
+    - export NEW_IMAGE_NAME="${INDEV_IMAGE_REGISTRY}:${INDEV_IMAGE_TAG}-${BUILD_ARCH_NICE}" && echo $NEW_IMAGE_NAME
+    - docker buildx build --push --platform "${BUILD_ARCH}" -t "$NEW_IMAGE_NAME" ./docker/moos-ivp
+    - |
+    docker buildx imagetools inspect ${INDEV_IMAGE_NAME}
+    if [[ "$?" != 0 ]]; then
+    docker buildx imagetools create -t ${INDEV_IMAGE_NAME} "$NEW_IMAGE_NAME"
+    else 
+    docker buildx imagetools create --append -t "${INDEV_IMAGE_NAME}" "$NEW_IMAGE_NAME"
+    fi
 
 build-ivp:amd64:
   timeout: 1h
@@ -48,7 +55,7 @@ build-ivp:armv7:
     
 # Test
 test-build-check:
-  image: "${INDEV_IMAGE_NAME}-${DEFAULT_NICE_ARCH}"
+  image: "${INDEV_IMAGE_NAME}"
   stage: test
   allow_failure: true
   script:
@@ -56,7 +63,7 @@ test-build-check:
     - build-check.sh
 
 test-unit-tests:
-  image: "${INDEV_IMAGE_NAME}-${DEFAULT_NICE_ARCH}"
+  image: "${INDEV_IMAGE_NAME}"
   stage: test
   allow_failure: true
   script:
@@ -85,7 +92,7 @@ test-unit-tests:
     - merge_requests
     - external_pull_requests
   script:
-    - export SVN_REV="r$(docker run --rm ${INDEV_IMAGE_NAME}-${DEFAULT_NICE_ARCH} svn info --show-item revision moos-ivp)" && echo $SVN_REV
+    - export SVN_REV="r$(docker run --rm ${INDEV_IMAGE_NAME} svn info --show-item revision moos-ivp)" && echo $SVN_REV
     - export CI_MANIFEST_LIST="${INDEV_IMAGE_REGISTRY}:${INDEV_IMAGE_TAG}-amd64 ${INDEV_IMAGE_REGISTRY}:${INDEV_IMAGE_TAG}-arm64 ${INDEV_IMAGE_REGISTRY}:${INDEV_IMAGE_TAG}-armv7" && echo "$CI_MANIFEST_LIST"
     - export DOCKER_CLI_EXPERIMENTAL=enabled
     - echo "$REGISTRY_PASSWD" | docker login --username $REGISTRY_USER --password-stdin $REGISTRY_URL
@@ -100,7 +107,7 @@ deploy-gitlab-registry:
     REGISTRY_USER: "$CI_REGISTRY_USER"
     REGISTRY_PASSWD: "$CI_REGISTRY_PASSWORD"
     REPO_PATH: "$CI_REGISTRY_IMAGE"
-  <<: *deploy_generic_manifest
+  <<: *deploy_generic
 
 deploy-docker-hub-registry:
   only:
@@ -112,4 +119,4 @@ deploy-docker-hub-registry:
     REGISTRY_USER: "$DOCKER_HUB_USERNAME"
     REGISTRY_PASSWD: "$DOCKER_HUB_PUSH_KEY"
     REPO_PATH: "${REGISTRY_URL}/moosivp/moos-ivp"
-  <<: *deploy_generic_manifest
+  <<: *deploy_generic
