@@ -24,7 +24,8 @@ variables:
     - echo "$CI_REGISTRY_PASSWORD" | docker login -u $CI_REGISTRY_USER --password-stdin $CI_REGISTRY
     - export NEW_IMAGE_NAME="${INDEV_IMAGE_REGISTRY}:${INDEV_IMAGE_TAG}-${BUILD_ARCH_NICE}" && echo $NEW_IMAGE_NAME
     - docker buildx build --push --platform "${BUILD_ARCH}" -t "$NEW_IMAGE_NAME" ./docker/moos-ivp
-    - docker buildx imagetools inspect "${INDEV_IMAGE_NAME}" && export IMAGE_EXISTS="$?" & echo $IMAGE_EXISTS
+    - echo "Checking for existance of image ${INDEV_IMAGE_NAME}"
+    - docker buildx imagetools inspect "${INDEV_IMAGE_NAME}"; export IMAGE_EXISTS="$?"; echo "Image Exists if 0 == ${IMAGE_EXISTS}"
     - if [[ "$IMAGE_EXISTS" != 0 ]]; then docker buildx imagetools create -t "${INDEV_IMAGE_NAME}" "$NEW_IMAGE_NAME"; fi
     - if [[ "$IMAGE_EXISTS" == 0 ]]; then docker buildx imagetools create --append -t "${INDEV_IMAGE_NAME}" "$NEW_IMAGE_NAME"; fi
 
