@@ -11,8 +11,8 @@ stages:
 variables:
   DOCKER_HOST: tcp://docker:2375/
   DEFAULT_NICE_ARCH: "amd64" # ensure this arch exists for tests and grabbing SVN_REV
-  INDEV_IMAGE_TAG: "trunk-indev"
-  INDEV_IMAGE_REGISTRY: "${CI_REGISTRY_IMAGE}/${CI_PIPELINE_ID}"
+  INDEV_IMAGE_TAG: "trunk-indev_CI-${CI_PIPELINE_ID}"
+  INDEV_IMAGE_REGISTRY: "${CI_REGISTRY_IMAGE}/indev"
   INDEV_IMAGE_NAME: "${INDEV_IMAGE_REGISTRY}/${DEFAULT_ARCH}:${INDEV_IMAGE_TAG}"
 
 # Build
@@ -23,7 +23,7 @@ variables:
     - docker buildx create --use
     - docker buildx inspect --bootstrap
     - echo "$CI_REGISTRY_PASSWORD" | docker login -u $CI_REGISTRY_USER --password-stdin $CI_REGISTRY
-    - docker buildx build --push --platform "${BUILD_ARCH}" -t "${INDEV_IMAGE_REGISTRY}/${BUILD_ARCH_NICE}:${INDEV_IMAGE_TAG}" ./docker/moos-ivp
+    - docker buildx build --push --platform "${BUILD_ARCH}" -t "${INDEV_IMAGE_REGISTRY}:${INDEV_IMAGE_TAG}-${BUILD_ARCH_NICE}" ./docker/moos-ivp
 
 build-ivp:amd64:
   timeout: 1h
@@ -48,7 +48,7 @@ build-ivp:armv7:
     
 # Test
 test-build-check:
-  image: "${INDEV_IMAGE_NAME}"
+  image: "${INDEV_IMAGE_NAME}-${DEFAULT_NICE_ARCH}"
   stage: test
   allow_failure: true
   script:
@@ -56,7 +56,7 @@ test-build-check:
     - build-check.sh
 
 test-unit-tests:
-  image: "${INDEV_IMAGE_NAME}"
+  image: "${INDEV_IMAGE_NAME}-${DEFAULT_NICE_ARCH}"
   stage: test
   allow_failure: true
   script:
@@ -85,14 +85,14 @@ test-unit-tests:
     - merge_requests
     - external_pull_requests
   script:
-    - export SVN_REV="r$(docker run --rm $INDEV_IMAGE_NAME svn info --show-item revision moos-ivp)" && echo $SVN_REV
-    - export CI_MANIFEST_LIST="${INDEV_IMAGE_REGISTRY}/linux/amd64:${INDEV_IMAGE_TAG} ${INDEV_IMAGE_REGISTRY}/linux/arm64:${INDEV_IMAGE_TAG} ${INDEV_IMAGE_REGISTRY}/linux/arm/v7:${INDEV_IMAGE_TAG}" && echo "$CI_MANIFEST_LIST"
+    - export SVN_REV="r$(docker run --rm ${INDEV_IMAGE_NAME}-${DEFAULT_NICE_ARCH} svn info --show-item revision moos-ivp)" && echo $SVN_REV
+    - export CI_MANIFEST_LIST="${INDEV_IMAGE_REGISTRY}:${INDEV_IMAGE_TAG}-amd64 ${INDEV_IMAGE_REGISTRY}:${INDEV_IMAGE_TAG}-arm64 ${INDEV_IMAGE_REGISTRY}:${INDEV_IMAGE_TAG}-armv7" && echo "$CI_MANIFEST_LIST"
     - export DOCKER_CLI_EXPERIMENTAL=enabled
-    - docker manifest create ${REPO_PATH}:${SVN_REV} $CI_MANIFEST_LIST
-    - docker manifest create ${REPO_PATH}:latest $CI_MANIFEST_LIST
     - echo "$REGISTRY_PASSWD" | docker login --username $REGISTRY_USER --password-stdin $REGISTRY_URL
+    - docker manifest create ${REPO_PATH}:${SVN_REV} $CI_MANIFEST_LIST
+    - docker manifest create ${REPO_PATH}:trunk $CI_MANIFEST_LIST
     - docker manifest push ${REPO_PATH}:${SVN_REV}
-    - docker manifest push ${REPO_PATH}:latest
+    - docker manifest push ${REPO_PATH}:trunk
 
 deploy-gitlab-registry:
   variables:
