@@ -25,12 +25,12 @@ variables:
     - export NEW_IMAGE_NAME="${INDEV_IMAGE_REGISTRY}:${INDEV_IMAGE_TAG}-${BUILD_ARCH_NICE}" && echo $NEW_IMAGE_NAME
     - docker buildx build --push --platform "${BUILD_ARCH}" -t "$NEW_IMAGE_NAME" ./docker/moos-ivp
     - |
-    docker buildx imagetools inspect ${INDEV_IMAGE_NAME}
-    if [[ "$?" != 0 ]]; then
-    docker buildx imagetools create -t ${INDEV_IMAGE_NAME} "$NEW_IMAGE_NAME"
-    else 
-    docker buildx imagetools create --append -t "${INDEV_IMAGE_NAME}" "$NEW_IMAGE_NAME"
-    fi
+        docker buildx imagetools inspect ${INDEV_IMAGE_NAME}
+        if [[ "$?" != 0 ]]; then
+        docker buildx imagetools create -t ${INDEV_IMAGE_NAME} "$NEW_IMAGE_NAME"
+        else 
+        docker buildx imagetools create --append -t "${INDEV_IMAGE_NAME}" "$NEW_IMAGE_NAME"
+        fi
 
 build-ivp:amd64:
   timeout: 1h
