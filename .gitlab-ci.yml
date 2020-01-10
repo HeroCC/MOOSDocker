@@ -10,9 +10,7 @@ stages:
 
 variables:
   DOCKER_HOST: tcp://docker:2375/
-  INDEV_IMAGE_TAG: "trunk_CI-${CI_PIPELINE_ID}"
-  INDEV_IMAGE_REGISTRY: "${CI_REGISTRY_IMAGE}/indev"
-  INDEV_IMAGE_NAME: "${INDEV_IMAGE_REGISTRY}:${INDEV_IMAGE_TAG}"
+  INDEV_IMAGE_NAME: "${CI_REGISTRY_IMAGE}/indev:trunk_CI-${CI_PIPELINE_ID}"
 
 # Build
 .install_buildx_template: &build_generic
@@ -22,12 +20,12 @@ variables:
     - docker buildx create --use
     - docker buildx inspect --bootstrap
     - echo "$CI_REGISTRY_PASSWORD" | docker login -u $CI_REGISTRY_USER --password-stdin $CI_REGISTRY
-    - export NEW_IMAGE_NAME="${INDEV_IMAGE_REGISTRY}:${INDEV_IMAGE_TAG}-${BUILD_ARCH_NICE}" && echo $NEW_IMAGE_NAME
+    - export NEW_IMAGE_NAME="${INDEV_IMAGE_NAME}-${BUILD_ARCH_NICE}" && echo $NEW_IMAGE_NAME
     - docker buildx build --push --platform "${BUILD_ARCH}" -t "$NEW_IMAGE_NAME" ./docker/moos-ivp
     - echo "Checking for existance of image ${INDEV_IMAGE_NAME}"
     - docker buildx imagetools inspect "${INDEV_IMAGE_NAME}"; export IMAGE_EXISTS="$?"; echo "Image Exists if 0 == ${IMAGE_EXISTS}"
-    - if [[ "$IMAGE_EXISTS" != 0 ]]; then docker buildx imagetools create -t "${INDEV_IMAGE_NAME}" "$NEW_IMAGE_NAME"; fi
-    - if [[ "$IMAGE_EXISTS" == 0 ]]; then docker buildx imagetools create --append -t "${INDEV_IMAGE_NAME}" "$NEW_IMAGE_NAME"; fi
+    - if [[ "$IMAGE_EXISTS" != 0 ]]; then echo "Creating image..."; docker buildx imagetools create -t "${INDEV_IMAGE_NAME}" "$NEW_IMAGE_NAME"; fi
+    - if [[ "$IMAGE_EXISTS" == 0 ]]; then echo "Appending to image..."; docker buildx imagetools create --append -t "${INDEV_IMAGE_NAME}" "$NEW_IMAGE_NAME"; fi
 
 
 build-ivp:amd64:
