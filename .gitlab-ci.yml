@@ -23,9 +23,9 @@ variables:
     - export NEW_IMAGE_NAME="${INDEV_IMAGE_NAME}-${BUILD_ARCH_NICE}" && echo $NEW_IMAGE_NAME
     - docker buildx build --push --platform "${BUILD_ARCH}" -t "$NEW_IMAGE_NAME" ./docker/moos-ivp
     - echo "Checking for existance of image ${INDEV_IMAGE_NAME}"
-    - docker buildx imagetools inspect "${INDEV_IMAGE_NAME}"; export IMAGE_EXISTS="$?"; echo "Image Exists if 0 == ${IMAGE_EXISTS}"
-    - if [[ "$IMAGE_EXISTS" != 0 ]]; then echo "Creating image..."; docker buildx imagetools create -t "${INDEV_IMAGE_NAME}" "$NEW_IMAGE_NAME"; fi
-    - if [[ "$IMAGE_EXISTS" == 0 ]]; then echo "Appending to image..."; docker buildx imagetools create --append -t "${INDEV_IMAGE_NAME}" "$NEW_IMAGE_NAME"; fi
+    - docker buildx imagetools inspect "${INDEV_IMAGE_NAME}" || export IMAGE_EXISTS="false"
+    - if [[ "$IMAGE_EXISTS" == "false" ]]; then echo "Creating image..."; docker buildx imagetools create -t "${INDEV_IMAGE_NAME}" "$NEW_IMAGE_NAME"; fi
+    - if [[ "$IMAGE_EXISTS" != "false" ]]; then echo "Appending to image..."; docker buildx imagetools create --append -t "${INDEV_IMAGE_NAME}" "$NEW_IMAGE_NAME"; fi
 
 
 build-ivp:amd64:
