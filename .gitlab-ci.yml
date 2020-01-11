@@ -50,20 +50,25 @@ build-ivp:armv7:
   <<: *build_generic
     
 # Test
-test-build-check:
-  image: "${INDEV_IMAGE_NAME}"
+.test_common: &test_common
   stage: test
+  image: "${INDEV_IMAGE_NAME}"
   allow_failure: true
-  script:
+  variables:
+    - GIT_STRATEGY: none
+  before_script:
+    - cd $HOME
+    - ls
     - cd moos-ivp/
-    - build-check.sh
+
+test-build-check:
+  <<: *test_common
+  script:
+    - ./build-check.sh
 
 test-unit-tests:
-  image: "${INDEV_IMAGE_NAME}"
-  stage: test
-  allow_failure: true
+  <<: *test_common
   script:
-    - cd moos-ivp/ 
     - ./build-utests.sh
     - cd ivp/src_unit_tests/
     - ./alltest.sh
