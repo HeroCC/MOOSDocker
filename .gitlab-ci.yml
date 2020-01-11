@@ -55,7 +55,7 @@ build-ivp:armv7:
   image: "${INDEV_IMAGE_NAME}"
   allow_failure: true
   variables:
-    - GIT_STRATEGY: none
+    GIT_STRATEGY: none
   before_script:
     - cd $HOME
     - ls
