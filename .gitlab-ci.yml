@@ -1,4 +1,4 @@
-image: docker:19
+image: jonoh/docker-buildx-qemu@sha256:4fc5868d90c146563dace436cb1b850c2bd8055ff2e7d9d53fb4a83a7dc2969e
 
 services:
   - docker:dind
@@ -17,8 +17,7 @@ variables:
 .install_buildx_template: &build_generic
   stage: build
   script:
-    - export DOCKER_CLI_EXPERIMENTAL=enabled
-    - docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
+    - update-binfmts --enable
     - docker buildx create --use
     - docker buildx inspect --bootstrap
     - echo "$CI_REGISTRY_PASSWORD" | docker login -u $CI_REGISTRY_USER --password-stdin $CI_REGISTRY
