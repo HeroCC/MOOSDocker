@@ -99,11 +99,7 @@ test-unit-tests:
     - echo "$REGISTRY_PASSWD" | docker login --username $REGISTRY_USER --password-stdin $REGISTRY_URL
   script:
     # TODO dynamically get matching tags via registry API
-    - >
-      export IMAGES=""
-      for arch in $DEPLOY_ARCHS; do
-        IMAGES = "$IMAGES ${INDEV_IMAGE_NAME}-${arch}"
-      done
+    - for arch in $DEPLOY_ARCHS; do IMAGES="$IMAGES ${INDEV_IMAGE_NAME}-${arch}"; done
     - docker manifest create ${REPO_PATH}:${SVN_REV} ${IMAGES}
     - docker manifest create ${REPO_PATH}:trunk ${IMAGES}
     - docker manifest push --purge ${REPO_PATH}:${SVN_REV}
