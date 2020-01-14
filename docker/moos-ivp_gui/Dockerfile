@@ -4,17 +4,17 @@ LABEL maintainer = Conlan Cesar <conlanc@csail.mit.edu>
 # Set the default shell to bash
 SHELL ["/bin/bash", "-c"]
 
-# Install required MOOS build dependencies
-RUN apt-get update && apt-get install -y cmake build-essential subversion && apt-get clean
+# Install required MOOS dependencies
+RUN apt-get update -y && apt-get install -y cmake build-essential subversion libfltk1.3-dev freeglut3-dev libpng16-dev libjpeg-dev libxinerama-dev libxft-dev libtiff5-dev && apt-get clean
 
 # Check-out the MOOS-IvP trunk
-RUN svn co https://oceanai.mit.edu/svn/moos-ivp-aro/trunk /moos-ivp
+RUN svn co https://oceanai.mit.edu/svn/moos-ivp-aro/trunk /home/moos/moos-ivp
 
 # Build the MOOS-IvP tools
-RUN cd "/moos-ivp" && ./build-moos.sh -m && ./build-ivp.sh --nogui --nodebug
+RUN cd "$HOME/moos-ivp" && ./build.sh
 
 
-# Runtime Image
+# Runtime image
 FROM ubuntu:18.04
 LABEL maintainer = Conlan Cesar <conlanc@csail.mit.edu>
 
@@ -22,7 +22,7 @@ LABEL maintainer = Conlan Cesar <conlanc@csail.mit.edu>
 SHELL ["/bin/bash", "-c"]
 
 # Runtime deps
-RUN apt-get update && apt-get install -y netbase && apt-get clean
+RUN apt-get update && apt-get install -y netbase libfltk1.3 freeglut3 libpng16-16 libjpeg8 libxinerama1 libtiff5 && apt-get clean
 
 # Make a user to run the MOOS apps
 RUN useradd -m -p "moos" moos && usermod -a -G sudo moos
