@@ -1,4 +1,4 @@
-image: jonoh/docker-buildx-qemu@sha256:4fc5868d90c146563dace436cb1b850c2bd8055ff2e7d9d53fb4a83a7dc2969e
+image: docker:19
 
 services:
   - docker:dind
@@ -11,13 +11,13 @@ stages:
 variables:
   DOCKER_HOST: tcp://docker:2375/
   DEPLOY_ARCHS: "amd64 arm64 armv7"
-  INDEV_IMAGE_NAME: "${CI_REGISTRY_IMAGE}:trunk_CI-${CI_PIPELINE_ID}"
+  INDEV_IMAGE_NAME: "${CI_REGISTRY_IMAGE}/indev:trunk_CI-${CI_PIPELINE_ID}"
 
 # Build
 .install_buildx_template: &build_generic
   stage: build
   script:
-    - update-binfmts --enable
+    - docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
     - docker buildx create --use
     - docker buildx inspect --bootstrap
     - echo "$CI_REGISTRY_PASSWORD" | docker login -u $CI_REGISTRY_USER --password-stdin $CI_REGISTRY
