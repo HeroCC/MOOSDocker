@@ -13,9 +13,14 @@ ENV MOOS="moos-ivp-extend"
 ENV PATH="/home/moos/${MOOS}/bin:${PATH}"
 ENV IVP_BEHAVIOR_DIRS="${IVP_BEHAVIOR_DIRS}:/home/moos/${MOOS}/lib"
 
-# Uncomment your implementation accordingly. COPY recommended
-#COPY --chown=moos:moos "." "${HOME}/${MOOS}/"
-RUN svn co "https://oceanai.mit.edu/svn/${MOOS}-aro/trunk" "${HOME}/${MOOS}" 
+# Install any extra dependencies you need here
+USER root
+#RUN sudo apt install -y my-very-cool-dependency
+USER moos
+
+# If your Dockerfile is at the root of your repo, this will the entire repo into the container
+# Don't forget to create a .dockerignore! (LPT: Symlink it to .gitignore)
+COPY --chown=moos:moos "." "${HOME}/${MOOS}/"
 
 # Build 
 RUN cd "${HOME}/${MOOS}" && ./build.sh
