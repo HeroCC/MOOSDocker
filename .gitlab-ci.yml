@@ -75,19 +75,6 @@ test-unit-tests:
     - ./alltest.sh
 
 # Deploy
-.deploy_generic_imagetools: &deploy_generic_imagetools
-  stage: deploy
-  except:
-   - merge_requests
-   - external_pull_requests
-  before_script:
-    - export DOCKER_CLI_EXPERIMENTAL=enabled
-    - export SVN_REV="r$(docker run --rm ${INDEV_IMAGE_NAME} svn info --show-item revision moos-ivp)" && echo $SVN_REV
-    - echo "$REGISTRY_PASSWD" | docker login --username $REGISTRY_USER --password-stdin $REGISTRY_URL
-  script:
-    - docker buildx imagetools create --tag ${REPO_PATH}:${SVN_REV} $INDEV_IMAGE_NAME
-    - docker buildx imagetools create --tag ${REPO_PATH}:trunk $INDEV_IMAGE_NAME
-
 .deploy_generic_manifest: &deploy_generic_manifest
   stage: deploy
   except:
