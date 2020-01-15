@@ -112,7 +112,7 @@ test-unit-tests:
     - docker manifest push --purge ${REPO_PATH}:trunk${TAG_EXTRAS}
 
 deploy-gitlab-registry:
-  extends: deploy_generic_manifest
+  extends: .deploy_generic_manifest
   variables:
     REGISTRY_URL: "$CI_REGISTRY"
     REGISTRY_USER: "$CI_REGISTRY_USER"
@@ -125,7 +125,7 @@ deploy-gitlab-registry-gui:
     TAG_EXTRAS: "-gui"
 
 deploy-docker-hub-registry:
-  extends: deploy_generic_manifest
+  extends: .deploy_generic_manifest
   only:
     refs:
       - master
