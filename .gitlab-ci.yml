@@ -120,7 +120,7 @@ deploy-gitlab-registry:
     REPO_PATH: "$CI_REGISTRY_IMAGE"
 
 deploy-gitlab-registry-gui:
-  extends: deploy_gitlab
+  extends: deploy-gitlab-registry
   variables:
     TAG_EXTRAS: "-gui"
 
