@@ -5,7 +5,7 @@ LABEL maintainer = Conlan Cesar <conlanc@csail.mit.edu>
 SHELL ["/bin/bash", "-c"]
 
 # Install required MOOS dependencies
-RUN apt-get update -y && apt-get install -y cmake build-essential subversion libfltk1.3-dev freeglut3-dev libpng16-dev libjpeg-dev libxinerama-dev libxft-dev libtiff5-dev && apt-get clean
+RUN apt-get update -y && apt-get install -y cmake build-essential subversion libfltk1.3-dev freeglut3-dev libpng-dev libjpeg-dev libxinerama-dev libxft-dev libtiff5-dev && apt-get clean
 
 # Check-out the MOOS-IvP trunk
 RUN svn co https://oceanai.mit.edu/svn/moos-ivp-aro/trunk /home/moos/moos-ivp
