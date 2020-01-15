@@ -14,7 +14,7 @@ variables:
   INDEV_IMAGE_NAME: "${CI_REGISTRY_IMAGE}/indev:trunk_CI-${CI_PIPELINE_ID}"
 
 # Build
-.install_buildx_template: &build_generic
+.install_buildx_template:
   stage: build
   before_script:
     - update-binfmts --enable
@@ -31,50 +31,41 @@ variables:
     - if [[ "$IMAGE_EXISTS" != "false" ]]; then echo "Appending to image..."; docker buildx imagetools create --append -t "${INDEV_IMAGE_NAME}" "$NEW_IMAGE_NAME"; fi
 
 
-build-ivp:amd64:
+build-ivp-amd64:
+  extends: .install_buildx_template
   timeout: 1h
   variables:
     BUILD_ARCH: linux/amd64
     BUILD_ARCH_NICE: "amd64"
-  <<: *build_generic
 
-build-ivp:arm64:
+build-ivp-arm64:
+  extends: .install_buildx_template
   timeout: 3h
   variables:
     BUILD_ARCH: linux/arm64
     BUILD_ARCH_NICE: "arm64"
-  <<: *build_generic
 
-build-ivp:armv7:
+build-ivp-armv7:
+  extends: .install_buildx_template
   timeout: 3h
   variables:
     BUILD_ARCH: linux/arm/v7
     BUILD_ARCH_NICE: "armv7"
-  <<: *build_generic
 
 build-ivp:amd64:gui:
-  timeout: 1h
+  extends: build-ivp-amd64
   variables:
-    BUILD_ARCH: linux/amd64
-    BUILD_ARCH_NICE: "amd64"
     TAG_EXTRAS: "-gui"
-  <<: *build_generic
 
 build-ivp:arm64:gui:
-  timeout: 3h
+  extends: build-ivp-arm64
   variables:
-    BUILD_ARCH: linux/arm64
-    BUILD_ARCH_NICE: "arm64"
     TAG_EXTRAS: "-gui"
-  <<: *build_generic
 
-build-ivp:armv7:gui:
-  timeout: 3h
+build-ivp-armv7:gui:
+  extends: build-ivp-armv7
   variables:
-    BUILD_ARCH: linux/arm/v7
-    BUILD_ARCH_NICE: "armv7"
     TAG_EXTRAS: "-gui"
-  <<: *build_generic
     
 # Test
 .test_common: &test_common
