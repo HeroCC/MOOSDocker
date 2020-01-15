@@ -89,7 +89,7 @@ test-unit-tests:
     - >
         for arch in $DEPLOY_ARCHS; do
           NEW_IMAGE_NAME="${REPO_PATH}:${SVN_REV}-${arch}"
-          docker tag "${INDEV_IMAGE_NAME}-${arch} ${REPO_PATH}:${SVN_REV}-${arch}"
+          docker tag "${INDEV_IMAGE_NAME}-${arch}" "${NEW_IMAGE_NAME}"
           docker push "${NEW_IMAGE_NAME}"
           export IMAGES="$IMAGES ${NEW_IMAGE_NAME}"
         done
