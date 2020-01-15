@@ -38,5 +38,5 @@ ENV PATH="/home/moos/moos-ivp/bin:${PATH}"
 ENV IVP_BEHAVIOR_DIRS="/home/moos/moos-ivp/lib"
 
 # Copy built moos-ivp
-COPY --from=build --chown=moos:moos /moos-ivp "${HOME}/moos-ivp"
+COPY --from=build --chown=moos:moos /moos-ivp "/home/moos/moos-ivp"
 
