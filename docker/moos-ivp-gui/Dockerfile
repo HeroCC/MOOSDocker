@@ -11,7 +11,7 @@ RUN apt-get update -y && apt-get install -y cmake build-essential subversion lib
 RUN svn co https://oceanai.mit.edu/svn/moos-ivp-aro/trunk /home/moos/moos-ivp
 
 # Build the MOOS-IvP tools
-RUN cd "$HOME/moos-ivp" && ./build.sh
+RUN cd "/moos-ivp" && ./build.sh
 
 
 # Runtime image
@@ -38,5 +38,5 @@ ENV PATH="/home/moos/moos-ivp/bin:${PATH}"
 ENV IVP_BEHAVIOR_DIRS="/home/moos/moos-ivp/lib"
 
 # Copy built moos-ivp
-COPY --from=build --chown=moos:moos /moos-ivp "${HOME}/moos-ivp"
+COPY --from=build --chown=moos:moos /moos-ivp "/home/moos/moos-ivp"
 
