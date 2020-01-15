@@ -53,17 +53,17 @@ build-ivp-armv7:
     BUILD_ARCH: linux/arm/v7
     BUILD_ARCH_NICE: "armv7"
 
-build-ivp:amd64:gui:
+build-ivp-amd64-gui:
   extends: build-ivp-amd64
   variables:
     TAG_EXTRAS: "-gui"
 
-build-ivp:arm64:gui:
+build-ivp-arm64-gui:
   extends: build-ivp-arm64
   variables:
     TAG_EXTRAS: "-gui"
 
-build-ivp-armv7:gui:
+build-ivp-armv7-gui:
   extends: build-ivp-armv7
   variables:
     TAG_EXTRAS: "-gui"
@@ -93,7 +93,7 @@ test-unit-tests:
     - ./alltest.sh
 
 # Deploy
-.deploy_generic_manifest: &deploy_generic_manifest
+.deploy_generic_manifest:
   stage: deploy
   except:
    - merge_requests
@@ -111,35 +111,33 @@ test-unit-tests:
     - docker manifest push --purge ${REPO_PATH}:${SVN_REV}${TAG_EXTRAS}
     - docker manifest push --purge ${REPO_PATH}:trunk${TAG_EXTRAS}
 
-deploy-gitlab-registry: &deploy_gitlab
-  variables: &deploy_gitlab_vars
+deploy-gitlab-registry:
+  extends: deploy_generic_manifest
+  variables:
     REGISTRY_URL: "$CI_REGISTRY"
     REGISTRY_USER: "$CI_REGISTRY_USER"
     REGISTRY_PASSWD: "$CI_REGISTRY_PASSWORD"
     REPO_PATH: "$CI_REGISTRY_IMAGE"
-  <<: *deploy_generic_manifest
 
-deploy-gitlab-registry:gui:
-  <<: *deploy_gitlab
+deploy-gitlab-registry-gui:
+  extends: deploy_gitlab
   variables:
     TAG_EXTRAS: "-gui"
-    <<: *deploy_gitlab_vars
 
-deploy-docker-hub-registry: &deploy_dockerhub
+deploy-docker-hub-registry:
+  extends: deploy_generic_manifest
   only:
     refs:
       - master
       - schedules
-  variables: &deploy_dockerhub_vars
+  variables:
     REGISTRY_URL: "docker.io"
     REGISTRY_USER: "$DOCKER_HUB_USERNAME"
     REGISTRY_PASSWD: "$DOCKER_HUB_PUSH_KEY"
     REPO_PATH: "${REGISTRY_URL}/moosivp/moos-ivp"
-  <<: *deploy_generic_manifest
 
-deploy-gitlab-registry:gui:
-  <<: *deploy_dockerhub
+deploy-docker-hub-registry-gui:
+  extends: deploy-docker-hub-registry
   variables:
     TAG_EXTRAS: "-gui"
-    <<: *deploy_dockerhub_vars
 
