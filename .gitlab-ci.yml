@@ -16,14 +16,16 @@ variables:
 # Build
 .install_buildx_template: &build_generic
   stage: build
-  script:
+  before_script:
     - update-binfmts --enable
     - docker buildx create --use
     - docker buildx inspect --bootstrap
     - echo "$CI_REGISTRY_PASSWORD" | docker login -u $CI_REGISTRY_USER --password-stdin $CI_REGISTRY
-    - export NEW_IMAGE_NAME="${INDEV_IMAGE_NAME}-${BUILD_ARCH_NICE}" && echo $NEW_IMAGE_NAME
-    - docker buildx build --push --platform "${BUILD_ARCH}" -t "$NEW_IMAGE_NAME" ./docker/moos-ivp
-    - echo "Checking for existance of image ${INDEV_IMAGE_NAME}"
+  script:
+    - export INDEV_IMAGE_NAME="${INDEV_IMAGE_NAME}${TAG_EXTRAS}"
+    - export NEW_IMAGE_NAME="${INDEV_IMAGE_NAME}-${BUILD_ARCH_NICE}${TAG_EXTRAS}" && echo $NEW_IMAGE_NAME
+    - docker buildx build --push --platform "${BUILD_ARCH}" -t "$NEW_IMAGE_NAME" "./docker/moos-ivp${TAG_EXTRAS}"
+    - echo "Checking for existance of image ${INDEV_IMAGE_NAME}${TAG_EXTRAS}"
     - docker buildx imagetools inspect "${INDEV_IMAGE_NAME}" || export IMAGE_EXISTS="false"
     - if [[ "$IMAGE_EXISTS" == "false" ]]; then echo "Creating image..."; docker buildx imagetools create -t "${INDEV_IMAGE_NAME}" "$NEW_IMAGE_NAME"; fi
     - if [[ "$IMAGE_EXISTS" != "false" ]]; then echo "Appending to image..."; docker buildx imagetools create --append -t "${INDEV_IMAGE_NAME}" "$NEW_IMAGE_NAME"; fi
@@ -49,11 +51,35 @@ build-ivp:armv7:
     BUILD_ARCH: linux/arm/v7
     BUILD_ARCH_NICE: "armv7"
   <<: *build_generic
+
+build-ivp:amd64:gui:
+  timeout: 1h
+  variables:
+    BUILD_ARCH: linux/amd64
+    BUILD_ARCH_NICE: "amd64"
+    TAG_EXTRAS: "-gui"
+  <<: *build_generic
+
+build-ivp:arm64:gui:
+  timeout: 3h
+  variables:
+    BUILD_ARCH: linux/arm64
+    BUILD_ARCH_NICE: "arm64"
+    TAG_EXTRAS: "-gui"
+  <<: *build_generic
+
+build-ivp:armv7:gui:
+  timeout: 3h
+  variables:
+    BUILD_ARCH: linux/arm/v7
+    BUILD_ARCH_NICE: "armv7"
+    TAG_EXTRAS: "-gui"
+  <<: *build_generic
     
 # Test
 .test_common: &test_common
   stage: test
-  image: "${INDEV_IMAGE_NAME}"
+  image: "${INDEV_IMAGE_NAME}-gui"
   allow_failure: true
   variables:
     GIT_STRATEGY: none
@@ -82,32 +108,46 @@ test-unit-tests:
    - external_pull_requests
   before_script:
     - export DOCKER_CLI_EXPERIMENTAL=enabled
+    - export INDEV_IMAGE_NAME="${INDEV_IMAGE_NAME}${TAG_EXTRAS}"
     - export SVN_REV="r$(docker run --rm ${INDEV_IMAGE_NAME} svn info --show-item revision moos-ivp)" && echo $SVN_REV
     - echo "$REGISTRY_PASSWD" | docker login --username $REGISTRY_USER --password-stdin $REGISTRY_URL
   script:
     # TODO dynamically get matching tags via registry API
     - for arch in $DEPLOY_ARCHS; do IMAGES="$IMAGES ${INDEV_IMAGE_NAME}-${arch}"; done
-    - docker manifest create ${REPO_PATH}:${SVN_REV} ${IMAGES}
-    - docker manifest create ${REPO_PATH}:trunk ${IMAGES}
-    - docker manifest push --purge ${REPO_PATH}:${SVN_REV}
-    - docker manifest push --purge ${REPO_PATH}:trunk
+    - docker manifest create ${REPO_PATH}:${SVN_REV}${TAG_EXTRAS} ${IMAGES}
+    - docker manifest create ${REPO_PATH}:trunk${TAG_EXTRAS} ${IMAGES}
+    - docker manifest push --purge ${REPO_PATH}:${SVN_REV}${TAG_EXTRAS}
+    - docker manifest push --purge ${REPO_PATH}:trunk${TAG_EXTRAS}
 
-deploy-gitlab-registry:
-  variables:
+deploy-gitlab-registry: &deploy_gitlab
+  variables: &deploy_gitlab_vars
     REGISTRY_URL: "$CI_REGISTRY"
     REGISTRY_USER: "$CI_REGISTRY_USER"
     REGISTRY_PASSWD: "$CI_REGISTRY_PASSWORD"
     REPO_PATH: "$CI_REGISTRY_IMAGE"
   <<: *deploy_generic_manifest
 
-deploy-docker-hub-registry:
+deploy-gitlab-registry:gui:
+  <<: *deploy_gitlab
+  variables:
+    TAG_EXTRAS: "-gui"
+    <<: *deploy_gitlab_vars
+
+deploy-docker-hub-registry: &deploy_dockerhub
   only:
     refs:
       - master
       - schedules
-  variables:
+  variables: &deploy_dockerhub_vars
     REGISTRY_URL: "docker.io"
     REGISTRY_USER: "$DOCKER_HUB_USERNAME"
     REGISTRY_PASSWD: "$DOCKER_HUB_PUSH_KEY"
     REPO_PATH: "${REGISTRY_URL}/moosivp/moos-ivp"
   <<: *deploy_generic_manifest
+
+deploy-gitlab-registry:gui:
+  <<: *deploy_dockerhub
+  variables:
+    TAG_EXTRAS: "-gui"
+    <<: *deploy_dockerhub_vars
+
