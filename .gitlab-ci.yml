@@ -86,10 +86,16 @@ test-unit-tests:
     - echo "$REGISTRY_PASSWD" | docker login --username $REGISTRY_USER --password-stdin $REGISTRY_URL
   script:
     # TODO dynamically get matching tags via registry API
-    - for arch in $DEPLOY_ARCHS; do IMAGES="$IMAGES ${INDEV_IMAGE_NAME}-${arch}"; done
+    - >
+        for arch in $DEPLOY_ARCHS; do
+          NEW_IMAGE_NAME="${REPO_PATH}:${SVN_REV}-${arch}"
+          docker tag "${INDEV_IMAGE_NAME}-${arch} ${REPO_PATH}:${SVN_REV}-${arch}"
+          docker push "${NEW_IMAGE_NAME}"
+          export IMAGES="$IMAGES ${NEW_IMAGE_NAME}"
+        done
     - docker manifest create ${REPO_PATH}:${SVN_REV} ${IMAGES}
-    - docker manifest create ${REPO_PATH}:trunk ${IMAGES}
     - docker manifest push --purge ${REPO_PATH}:${SVN_REV}
+    - docker manifest create ${REPO_PATH}:trunk ${IMAGES}
     - docker manifest push --purge ${REPO_PATH}:trunk
 
 deploy-gitlab-registry:
