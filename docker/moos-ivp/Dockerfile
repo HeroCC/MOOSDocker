@@ -24,5 +24,5 @@ WORKDIR "/home/moos"
 RUN svn co https://oceanai.mit.edu/svn/moos-ivp-aro/trunk /home/moos/moos-ivp
 
 # Build the MOOS-IvP tools
-RUN cd "/moos-ivp" && ./build-moos.sh -m && ./build-ivp.sh --nogui --nodebug
+RUN cd "${HOME}/moos-ivp" && ./build-moos.sh -m && ./build-ivp.sh --nogui --nodebug
 
