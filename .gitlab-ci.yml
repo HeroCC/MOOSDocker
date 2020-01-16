@@ -69,7 +69,7 @@ build-ivp-armv7-gui:
     TAG_EXTRAS: "-gui"
     
 # Test
-.test_common: &test_common
+.test_common:
   stage: test
   image: "${INDEV_IMAGE_NAME}-gui"
   allow_failure: true
@@ -81,12 +81,12 @@ build-ivp-armv7-gui:
     - cd moos-ivp/
 
 test-build-check:
-  <<: *test_common
+  extends: .test_common
   script:
     - ./build-check.sh
 
 test-unit-tests:
-  <<: *test_common
+  extends: .test_common
   script:
     - ./build-utests.sh
     - cd ivp/src_unit_tests/
@@ -99,9 +99,9 @@ test-unit-tests:
    - merge_requests
    - external_pull_requests
   before_script:
-    - export DOCKER_CLI_EXPERIMENTAL=enabled
+    - export SVN_REV="r$(docker run --rm ${INDEV_IMAGE_NAME}-gui svn info --show-item revision moos-ivp)" && echo $SVN_REV
     - export INDEV_IMAGE_NAME="${INDEV_IMAGE_NAME}${TAG_EXTRAS}"
-    - export SVN_REV="r$(docker run --rm ${INDEV_IMAGE_NAME} svn info --show-item revision moos-ivp)" && echo $SVN_REV
+    - export DOCKER_CLI_EXPERIMENTAL=enabled
     - echo "$REGISTRY_PASSWD" | docker login --username $REGISTRY_USER --password-stdin $REGISTRY_URL
   script:
     # TODO dynamically get matching tags via registry API

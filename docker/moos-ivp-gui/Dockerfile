@@ -21,11 +21,11 @@ LABEL maintainer = Conlan Cesar <conlanc@csail.mit.edu>
 # Set the default shell to bash
 SHELL ["/bin/bash", "-c"]
 
-# Runtime deps
-RUN apt-get update && apt-get install -y netbase libfltk1.3 freeglut3 libpng16-16 libjpeg8 libxinerama1 libtiff5 && apt-get clean
-
 # Make a user to run the MOOS apps
 RUN useradd -m -p "moos" moos && usermod -a -G sudo moos
+
+# Runtime deps
+RUN apt-get update && apt-get install -y subversion netbase libfltk1.3 freeglut3 libpng16-16 libjpeg8 libxinerama1 libtiff5 && apt-get clean
 
 # Set the default user
 USER moos
