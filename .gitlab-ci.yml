@@ -22,7 +22,9 @@ variables:
     - docker buildx inspect --bootstrap
     - echo "$CI_REGISTRY_PASSWORD" | docker login -u $CI_REGISTRY_USER --password-stdin $CI_REGISTRY
     - export NEW_IMAGE_NAME="${INDEV_IMAGE_NAME}-${BUILD_ARCH_NICE}" && echo $NEW_IMAGE_NAME
-    - docker buildx build --push --platform "${BUILD_ARCH}" -t "$NEW_IMAGE_NAME" ./docker/moos-ivp
+    - if [[ -n "${SVN_REV}" ]]; then export BUILD_EXTRAS="--build-arg SVN_REV=${SVN_REV}"; fi
+    - echo Build Extras -> $BUILD_EXTRAS
+    - docker buildx build ${BUILD_EXTRAS} --push --platform "${BUILD_ARCH}" -t "$NEW_IMAGE_NAME" ./docker/moos-ivp
     - echo "Checking for existance of image ${INDEV_IMAGE_NAME}"
     - docker buildx imagetools inspect "${INDEV_IMAGE_NAME}" || export IMAGE_EXISTS="false"
     - if [[ "$IMAGE_EXISTS" == "false" ]]; then echo "Creating image..."; docker buildx imagetools create -t "${INDEV_IMAGE_NAME}" "$NEW_IMAGE_NAME"; fi
@@ -82,20 +84,20 @@ test-unit-tests:
    - external_pull_requests
   before_script:
     - export DOCKER_CLI_EXPERIMENTAL=enabled
-    - export SVN_REV="r$(docker run --rm ${INDEV_IMAGE_NAME} svn info --show-item revision moos-ivp)" && echo $SVN_REV
+    - export REVISION="r$(docker run --rm ${INDEV_IMAGE_NAME} svn info --show-item revision moos-ivp)" && echo $REVISION
     - echo "$REGISTRY_PASSWD" | docker login --username $REGISTRY_USER --password-stdin $REGISTRY_URL
   script:
     # TODO dynamically get matching tags via registry API
     - >
         for arch in $DEPLOY_ARCHS; do
-          NEW_IMAGE_NAME="${REPO_PATH}:${SVN_REV}-${arch}"
+          NEW_IMAGE_NAME="${REPO_PATH}:${REVISION}-${arch}"
           docker pull "${INDEV_IMAGE_NAME}-${arch}"
           docker tag "${INDEV_IMAGE_NAME}-${arch}" "${NEW_IMAGE_NAME}"
           docker push "${NEW_IMAGE_NAME}"
           export IMAGES="$IMAGES ${NEW_IMAGE_NAME}"
         done
-    - docker manifest create ${REPO_PATH}:${SVN_REV} ${IMAGES}
-    - docker manifest push --purge ${REPO_PATH}:${SVN_REV}
+    - docker manifest create ${REPO_PATH}:${REVISION} ${IMAGES}
+    - docker manifest push --purge ${REPO_PATH}:${REVISION}
     - docker manifest create ${REPO_PATH}:trunk ${IMAGES}
     - docker manifest push --purge ${REPO_PATH}:trunk
 
