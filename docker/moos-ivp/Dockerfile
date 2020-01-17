@@ -20,8 +20,11 @@ USER moos
 # Set the default entry dirctory to the moos user's home
 WORKDIR "/home/moos"
 
+# Build Arguments
+ARG SVN_REV=HEAD
+
 # Check-out the MOOS-IvP trunk
-RUN svn co https://oceanai.mit.edu/svn/moos-ivp-aro/trunk /home/moos/moos-ivp
+RUN svn co -r "$SVN_REV" https://oceanai.mit.edu/svn/moos-ivp-aro/trunk /home/moos/moos-ivp
 
 # Build the MOOS-IvP tools
 RUN cd "$HOME/moos-ivp" && ./build.sh
