@@ -2,7 +2,6 @@ image: jonoh/docker-buildx-qemu@sha256:4fc5868d90c146563dace436cb1b850c2bd8055ff
 
 services:
   - name: docker:dind
-    command: ["--storage-driver", "overlay2"]
 
 stages:
   - build
@@ -10,7 +9,6 @@ stages:
   - deploy
 
 variables:
-  DOCKER_DRIVER: overlay2
   DOCKER_HOST: tcp://docker:2375/
   DEPLOY_ARCHS: "amd64 arm64 armv7"
   INDEV_IMAGE_NAME: "${CI_REGISTRY_IMAGE}/indev:trunk_CI-${CI_PIPELINE_ID}"
