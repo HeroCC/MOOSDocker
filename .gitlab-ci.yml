@@ -9,6 +9,7 @@ stages:
   - deploy
 
 variables:
+  DOCKER_DRIVER: overlay2
   DOCKER_HOST: tcp://docker:2375/
   DEPLOY_ARCHS: "amd64 arm64 armv7"
   INDEV_IMAGE_NAME: "${CI_REGISTRY_IMAGE}/indev:trunk_CI-${CI_PIPELINE_ID}"
