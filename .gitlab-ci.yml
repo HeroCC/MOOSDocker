@@ -1,7 +1,8 @@
 image: jonoh/docker-buildx-qemu@sha256:4fc5868d90c146563dace436cb1b850c2bd8055ff2e7d9d53fb4a83a7dc2969e
 
 services:
-  - docker:dind
+  - name: docker:dind
+    command: ["--storage-driver", "overlay2"]
 
 stages:
   - build
