@@ -39,14 +39,14 @@ build-ivp:amd64:
   <<: *build_generic
 
 build-ivp:arm64:
-  timeout: 3h
+  timeout: 4h
   variables:
     BUILD_ARCH: linux/arm64
     BUILD_ARCH_NICE: "arm64"
   <<: *build_generic
 
 build-ivp:armv7:
-  timeout: 3h
+  timeout: 4h
   variables:
     BUILD_ARCH: linux/arm/v7
     BUILD_ARCH_NICE: "armv7"
