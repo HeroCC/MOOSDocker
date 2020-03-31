@@ -35,7 +35,7 @@ variables:
 build-ivp-amd64:
   stage: build
   timeout: 1h
-  extends: build_generic
+  extends: .build_generic
   variables:
     BUILD_ARCH: linux/amd64
     BUILD_ARCH_NICE: "amd64"
@@ -43,7 +43,7 @@ build-ivp-amd64:
 build-ivp-arm64:
   stage: build
   timeout: 3h
-  extends: build_generic
+  extends: .build_generic
   variables:
     BUILD_ARCH: linux/arm64
     BUILD_ARCH_NICE: "arm64"
@@ -51,7 +51,7 @@ build-ivp-arm64:
 build-ivp-armv7:
   stage: build
   timeout: 3h
-  extends: build_generic
+  extends: .build_generic
   variables:
     BUILD_ARCH: linux/arm/v7
     BUILD_ARCH_NICE: "armv7"
@@ -101,7 +101,7 @@ test-unit-tests:
     - ./alltest.sh
 
 # Deploy
-.deploy_generic_manifest
+.deploy_generic_manifest:
   stage: deploy
   except:
    - merge_requests
