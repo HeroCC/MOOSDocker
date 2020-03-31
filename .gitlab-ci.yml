@@ -64,12 +64,14 @@ build-ivp-amd64-gui:
     BUILD_EXTRAS: "--build-arg FROM=${INDEV_IMAGE_NAME}"
 
 build-ivp-arm64-gui:
+  stage: build-gui
   extends: build-ivp-arm64
   variables:
     BUILD_EXTRAS: "--build-arg FROM=${INDEV_IMAGE_NAME}"
     TAG_EXTRAS: "-gui"
 
 build-ivp-armv7-gui:
+  stage: build-gui
   extends: build-ivp-armv7
   variables:
     BUILD_EXTRAS: "--build-arg FROM=${INDEV_IMAGE_NAME}"
