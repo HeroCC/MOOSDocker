@@ -79,9 +79,9 @@ build-ivp-armv7-gui:
 
     
 # Test
-.test_common: &test_common
+.test_common:
   stage: test
-  image: "${INDEV_IMAGE_NAME}"
+  image: "${INDEV_IMAGE_NAME}-gui"
   allow_failure: true
   variables:
     GIT_STRATEGY: none
@@ -91,12 +91,12 @@ build-ivp-armv7-gui:
     - cd moos-ivp/
 
 test-build-check:
-  <<: *test_common
+  extends: .test_common
   script:
     - ./build-check.sh
 
 test-unit-tests:
-  <<: *test_common
+  extends: .test_common
   script:
     - ./build-utests.sh
     - cd ivp/src_unit_tests/
