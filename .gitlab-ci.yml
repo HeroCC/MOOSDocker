@@ -117,10 +117,10 @@ test-unit-tests:
     # TODO dynamically get matching tags via registry API
     - >
         for arch in $DEPLOY_ARCHS; do
-          NEW_IMAGE_NAME="${REPO_PATH}:${REVISION}-${arch}"
-          docker pull "${INDEV_IMAGE_NAME}-${arch}"
-          docker tag "${INDEV_IMAGE_NAME}-${arch}" "${NEW_IMAGE_NAME}"
-          docker push "${NEW_IMAGE_NAME}"
+          NEW_IMAGE_NAME="${REPO_PATH}:${REVISION}-${arch}${TAG_EXTRAS}"
+          docker pull "${INDEV_IMAGE_NAME}-${arch}${TAG_EXTRAS}"
+          docker tag "${INDEV_IMAGE_NAME}-${arch}${TAG_EXTRAS}" "${NEW_IMAGE_NAME}"
+          docker push "${NEW_IMAGE_NAME}${TAG_EXTRAS}"
           export IMAGES="$IMAGES ${NEW_IMAGE_NAME}"
         done
     - docker manifest create ${REPO_PATH}:${REVISION}${TAG_EXTRAS} ${IMAGES}
