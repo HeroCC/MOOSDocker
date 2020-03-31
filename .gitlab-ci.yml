@@ -59,22 +59,29 @@ build-ivp-armv7:
 build-ivp-amd64-gui:
   stage: build-gui
   extends: build-ivp-amd64
+  needs:
+    - build-ivp-amd64
+  before_script:
+     # GitLab doesn't expand variables containing variables, so we need to do it here
+     # https://docs.gitlab.com/ee/ci/variables/where_variables_can_be_used.html#expansion-mechanisms
+    - export BUILD_EXTRAS="$BUILD_EXTRAS --build-arg FROM=${INDEV_IMAGE_NAME}"
   variables:
     TAG_EXTRAS: "-gui"
-    BUILD_EXTRAS: "--build-arg FROM=${INDEV_IMAGE_NAME}"
 
 build-ivp-arm64-gui:
   stage: build-gui
   extends: build-ivp-arm64
+  before_script:
+    - export BUILD_EXTRAS="$BUILD_EXTRAS --build-arg FROM=${INDEV_IMAGE_NAME}"
   variables:
-    BUILD_EXTRAS: "--build-arg FROM=${INDEV_IMAGE_NAME}"
     TAG_EXTRAS: "-gui"
 
 build-ivp-armv7-gui:
   stage: build-gui
   extends: build-ivp-armv7
+  before_script:
+    - export BUILD_EXTRAS="$BUILD_EXTRAS --build-arg FROM=${INDEV_IMAGE_NAME}"
   variables:
-    BUILD_EXTRAS: "--build-arg FROM=${INDEV_IMAGE_NAME}"
     TAG_EXTRAS: "-gui"
 
     
