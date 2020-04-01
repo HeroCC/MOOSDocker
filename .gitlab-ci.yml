@@ -5,6 +5,7 @@ services:
 
 stages:
   - build
+  - build-gui
   - test
   - deploy
 
@@ -14,48 +15,80 @@ variables:
   INDEV_IMAGE_NAME: "${CI_REGISTRY_IMAGE}/indev:trunk_CI-${CI_PIPELINE_ID}"
 
 # Build
-.install_buildx_template: &build_generic
-  stage: build
+.build_generic:
   script:
     - update-binfmts --enable
     - docker buildx create --use
     - docker buildx inspect --bootstrap
     - echo "$CI_REGISTRY_PASSWORD" | docker login -u $CI_REGISTRY_USER --password-stdin $CI_REGISTRY
-    - export NEW_IMAGE_NAME="${INDEV_IMAGE_NAME}-${BUILD_ARCH_NICE}" && echo $NEW_IMAGE_NAME
-    - if [[ -n "${SVN_REVISION}" ]]; then export BUILD_EXTRAS="--build-arg SVN_REV=${SVN_REVISION}"; fi
+    - export NEW_IMAGE_NAME="${INDEV_IMAGE_NAME}-${BUILD_ARCH_NICE}${TAG_EXTRAS}" && echo $NEW_IMAGE_NAME
+    - if [[ -n "${SVN_REVISION}" ]]; then export BUILD_EXTRAS="--build-arg SVN_REV=${SVN_REVISION} $BUILD_EXTRAS"; fi
     - echo "Build Extras -> $BUILD_EXTRAS"
-    - docker buildx build ${BUILD_EXTRAS} --push --platform "${BUILD_ARCH}" -t "$NEW_IMAGE_NAME" ./docker/moos-ivp
+    - echo "Tag Extras -> $TAG_EXTRAS"
+    - docker buildx build ${BUILD_EXTRAS} --push --platform "${BUILD_ARCH}" -t "$NEW_IMAGE_NAME" "./docker/moos-ivp${TAG_EXTRAS}"
     - echo "Checking for existance of image ${INDEV_IMAGE_NAME}"
-    - docker buildx imagetools inspect "${INDEV_IMAGE_NAME}" || export IMAGE_EXISTS="false"
-    - if [[ "$IMAGE_EXISTS" == "false" ]]; then echo "Creating image..."; docker buildx imagetools create -t "${INDEV_IMAGE_NAME}" "$NEW_IMAGE_NAME"; fi
-    - if [[ "$IMAGE_EXISTS" != "false" ]]; then echo "Appending to image..."; docker buildx imagetools create --append -t "${INDEV_IMAGE_NAME}" "$NEW_IMAGE_NAME"; fi
+    - docker buildx imagetools inspect "${INDEV_IMAGE_NAME}${TAG_EXTRAS}" || export IMAGE_EXISTS="false"
+    - if [[ "$IMAGE_EXISTS" == "false" ]]; then echo "Creating image..."; docker buildx imagetools create -t "${INDEV_IMAGE_NAME}${TAG_EXTRAS}" "$NEW_IMAGE_NAME"; fi
+    - if [[ "$IMAGE_EXISTS" != "false" ]]; then echo "Appending to image..."; docker buildx imagetools create --append -t "${INDEV_IMAGE_NAME}${TAG_EXTRAS}" "$NEW_IMAGE_NAME"; fi
 
 
-build-ivp:amd64:
+build-ivp-amd64:
+  stage: build
   timeout: 1h
+  extends: .build_generic
   variables:
     BUILD_ARCH: linux/amd64
     BUILD_ARCH_NICE: "amd64"
-  <<: *build_generic
 
-build-ivp:arm64:
-  timeout: 4h
+build-ivp-arm64:
+  stage: build
+  timeout: 3h
+  extends: .build_generic
   variables:
     BUILD_ARCH: linux/arm64
     BUILD_ARCH_NICE: "arm64"
-  <<: *build_generic
 
-build-ivp:armv7:
-  timeout: 4h
+build-ivp-armv7:
+  stage: build
+  timeout: 3h
+  extends: .build_generic
   variables:
     BUILD_ARCH: linux/arm/v7
     BUILD_ARCH_NICE: "armv7"
-  <<: *build_generic
+
+build-ivp-amd64-gui:
+  stage: build-gui
+  extends: build-ivp-amd64
+  needs:
+    - build-ivp-amd64
+  before_script:
+     # GitLab doesn't expand variables containing variables, so we need to do it here
+     # https://docs.gitlab.com/ee/ci/variables/where_variables_can_be_used.html#expansion-mechanisms
+    - export BUILD_EXTRAS="$BUILD_EXTRAS --build-arg FROM=${INDEV_IMAGE_NAME}"
+  variables:
+    TAG_EXTRAS: "-gui"
+
+build-ivp-arm64-gui:
+  stage: build-gui
+  extends: build-ivp-arm64
+  before_script:
+    - export BUILD_EXTRAS="$BUILD_EXTRAS --build-arg FROM=${INDEV_IMAGE_NAME}"
+  variables:
+    TAG_EXTRAS: "-gui"
+
+build-ivp-armv7-gui:
+  stage: build-gui
+  extends: build-ivp-armv7
+  before_script:
+    - export BUILD_EXTRAS="$BUILD_EXTRAS --build-arg FROM=${INDEV_IMAGE_NAME}"
+  variables:
+    TAG_EXTRAS: "-gui"
+
     
 # Test
-.test_common: &test_common
+.test_common:
   stage: test
-  image: "${INDEV_IMAGE_NAME}"
+  image: "${INDEV_IMAGE_NAME}-gui"
   allow_failure: true
   variables:
     GIT_STRATEGY: none
@@ -65,19 +98,19 @@ build-ivp:armv7:
     - cd moos-ivp/
 
 test-build-check:
-  <<: *test_common
+  extends: .test_common
   script:
     - ./build-check.sh
 
 test-unit-tests:
-  <<: *test_common
+  extends: .test_common
   script:
     - ./build-utests.sh
     - cd ivp/src_unit_tests/
     - ./alltest.sh
 
 # Deploy
-.deploy_generic_manifest: &deploy_generic_manifest
+.deploy_generic_manifest:
   stage: deploy
   except:
    - merge_requests
@@ -85,31 +118,38 @@ test-unit-tests:
   before_script:
     - export DOCKER_CLI_EXPERIMENTAL=enabled
     - export REVISION="r$(docker run --rm ${INDEV_IMAGE_NAME} svn info --show-item revision moos-ivp)" && echo $REVISION
+    - echo "Tag Extras -> ${TAG_EXTRAS}"
     - echo "$REGISTRY_PASSWD" | docker login --username $REGISTRY_USER --password-stdin $REGISTRY_URL
   script:
     # TODO dynamically get matching tags via registry API
     - >
         for arch in $DEPLOY_ARCHS; do
-          NEW_IMAGE_NAME="${REPO_PATH}:${REVISION}-${arch}"
-          docker pull "${INDEV_IMAGE_NAME}-${arch}"
-          docker tag "${INDEV_IMAGE_NAME}-${arch}" "${NEW_IMAGE_NAME}"
+          NEW_IMAGE_NAME="${REPO_PATH}:${REVISION}-${arch}${TAG_EXTRAS}"
+          docker pull "${INDEV_IMAGE_NAME}-${arch}${TAG_EXTRAS}"
+          docker tag "${INDEV_IMAGE_NAME}-${arch}${TAG_EXTRAS}" "${NEW_IMAGE_NAME}"
           docker push "${NEW_IMAGE_NAME}"
           export IMAGES="$IMAGES ${NEW_IMAGE_NAME}"
         done
-    - docker manifest create ${REPO_PATH}:${REVISION} ${IMAGES}
-    - docker manifest push --purge ${REPO_PATH}:${REVISION}
-    - docker manifest create ${REPO_PATH}:trunk ${IMAGES}
-    - docker manifest push --purge ${REPO_PATH}:trunk
+    - docker manifest create ${REPO_PATH}:${REVISION}${TAG_EXTRAS} ${IMAGES}
+    - docker manifest push --purge ${REPO_PATH}:${REVISION}${TAG_EXTRAS}
+    - docker manifest create ${REPO_PATH}:trunk${TAG_EXTRAS} ${IMAGES}
+    - docker manifest push --purge ${REPO_PATH}:trunk${TAG_EXTRAS}
 
 deploy-gitlab-registry:
+  extends: .deploy_generic_manifest
   variables:
     REGISTRY_URL: "$CI_REGISTRY"
     REGISTRY_USER: "$CI_REGISTRY_USER"
     REGISTRY_PASSWD: "$CI_REGISTRY_PASSWORD"
     REPO_PATH: "$CI_REGISTRY_IMAGE"
-  <<: *deploy_generic_manifest
+
+deploy-gitlab-registry-gui:
+  extends: deploy-gitlab-registry
+  variables:
+    TAG_EXTRAS: "-gui"
 
 deploy-docker-hub-registry:
+  extends: .deploy_generic_manifest
   only:
     refs:
       - master
@@ -119,4 +159,9 @@ deploy-docker-hub-registry:
     REGISTRY_USER: "$DOCKER_HUB_USERNAME"
     REGISTRY_PASSWD: "$DOCKER_HUB_PUSH_KEY"
     REPO_PATH: "${REGISTRY_URL}/moosivp/moos-ivp"
-  <<: *deploy_generic_manifest
+
+deploy-docker-hub-registry-gui:
+  extends: deploy-docker-hub-registry
+  variables:
+    TAG_EXTRAS: "-gui"
+

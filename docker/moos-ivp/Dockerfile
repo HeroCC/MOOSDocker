@@ -9,7 +9,7 @@ ENV PATH="/home/moos/moos-ivp/bin:${PATH}"
 ENV IVP_BEHAVIOR_DIRS="/home/moos/moos-ivp/lib"
 
 # Install required MOOS dependencies
-RUN apt-get update -y && apt-get install -y cmake build-essential subversion git libtiff5-dev libfltk1.3-dev freeglut3-dev libpng-dev libjpeg-dev libxinerama-dev libxft-dev libtiff5-dev && apt-get clean
+RUN apt-get update -y && apt-get install -y cmake build-essential subversion && apt-get clean
 
 # Make a user to run the MOOS apps
 RUN useradd -m -p "moos" moos && usermod -a -G sudo moos
@@ -27,5 +27,5 @@ ARG SVN_REV=HEAD
 RUN svn co -r "$SVN_REV" https://oceanai.mit.edu/svn/moos-ivp-aro/trunk /home/moos/moos-ivp
 
 # Build the MOOS-IvP tools
-RUN cd "$HOME/moos-ivp" && ./build.sh
+RUN cd "$HOME/moos-ivp" && ./build-moos.sh --minrobot --release && ./build-ivp.sh --nogui
 
