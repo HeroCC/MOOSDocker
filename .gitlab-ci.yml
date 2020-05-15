@@ -11,7 +11,7 @@ stages:
 
 variables:
   DOCKER_HOST: tcp://docker:2375/
-  DEPLOY_ARCHS: "amd64 arm64 armv7"
+  DEPLOY_ARCHS: "amd64 arm64 armv7 riscv"
   INDEV_IMAGE_NAME: "${CI_REGISTRY_IMAGE}/indev:trunk_CI-${CI_PIPELINE_ID}"
 
 # Build
@@ -40,6 +40,14 @@ build-ivp-amd64:
     BUILD_ARCH: linux/amd64
     BUILD_ARCH_NICE: "amd64"
 
+build-ivp-riscv:
+  stage: build
+  timeout: 3h
+  extends: .build_generic
+  variables:
+    BUILD_ARCH: linux/riscv64
+    BUILD_ARCH_NICE: "riscv"
+
 build-ivp-arm64:
   stage: build
   timeout: 3h
@@ -64,6 +72,14 @@ build-ivp-amd64-gui:
   before_script:
      # GitLab doesn't expand variables containing variables, so we need to do it here
      # https://docs.gitlab.com/ee/ci/variables/where_variables_can_be_used.html#expansion-mechanisms
+    - export BUILD_EXTRAS="$BUILD_EXTRAS --build-arg FROM=${INDEV_IMAGE_NAME}"
+  variables:
+    TAG_EXTRAS: "-gui"
+
+build-ivp-riscv-gui:
+  stage: build-gui
+  extends: build-ivp-riscv
+  before_script:
     - export BUILD_EXTRAS="$BUILD_EXTRAS --build-arg FROM=${INDEV_IMAGE_NAME}"
   variables:
     TAG_EXTRAS: "-gui"
