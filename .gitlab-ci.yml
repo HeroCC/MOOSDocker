@@ -16,7 +16,7 @@ variables:
 
 # Build
 .build_generic:
-  retries: 2
+  retry: 2
   script:
     - update-binfmts --enable
     - docker buildx create --use
