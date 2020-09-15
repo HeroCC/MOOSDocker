@@ -166,3 +166,19 @@ deploy-docker-hub-registry-gui:
   variables:
     TAG_EXTRAS: "-gui"
 
+deploy-quay-registry:
+  extends: .deploy_generic_manifest
+  only:
+    refs:
+      - master
+      - schedules
+  variables:
+    REGISTRY_URL: "quay.io"
+    REGISTRY_USER: "$QUAY_USERNAME"
+    REGISTRY_PASSWD: "$QUAY_PUSH_KEY"
+    REPO_PATH: "${REGISTRY_URL}/moosivp/moos-ivp"
+
+deploy-quay-registry-gui:
+  extends: deploy-quay-registry
+  variables:
+    TAG_EXTRAS: "-gui"
