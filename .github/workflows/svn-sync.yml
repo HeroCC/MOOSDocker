@@ -1,0 +1,46 @@
+# Updates the svn-mirror git repo with new revisions from svn
+# It is in this repo to avoid cluttering the main moos tree with CI stuff (until it completely switches to git), and since Github scheduled workflows only run on the master branch
+
+name: SVN Mirror Sync
+on:
+  workflow_dispatch:
+  repository_dispatch:
+  schedule:
+    - cron: '30 0 * * *'
+
+jobs:
+  svn-mirror:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get git mirror repo
+        uses: actions/checkout@v2
+        with:
+          repository: 'HeroCC/svn-mirror'
+          ref: 'master'
+      - name: Install git-svn
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y git-svn
+      - name: Cache .git/svn directory # speeds up indexing
+        uses: actions/cache@v2
+        with: 
+          path: .git/svn/
+          key: git-svn-state-1-${{ hashFiles('.git/svn/') }}
+          restore-keys: |
+            git-svn-state-1-
+      - name: Configure Git config with SVN remote
+        run: |
+          git svn --version
+          # Git-svn doesn't have a native way to add & configure a remote in an existing repo, so do it ourselves
+          git config svn-remote.svn.url 'https://oceanai.mit.edu/svn/moos-ivp-aro'
+          git config svn-remote.svn.fetch 'trunk:refs/remotes/origin/master' # Maps the trunk from SVN to the master branch on git
+          #git config svn-remote.svn.tags 'releases/*:refs/remotes/origin/tags/*' 
+      - name: Fetch new changes from SVN
+        run: |
+          git svn info
+          git svn fetch
+      - name: Push new commits to git
+        run: |
+          git svn rebase
+          git push
+
