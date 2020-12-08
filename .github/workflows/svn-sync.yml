@@ -15,7 +15,7 @@ jobs:
       - name: Get git mirror repo
         uses: actions/checkout@v2
         with:
-          repository: 'HeroCC/svn-mirror'
+          repository: 'moos-ivp/svn-mirror'
           ssh-key: ${{ secrets.SVN_MIRROR_REPO_DEPLOY_KEY }}
           ref: 'master'
       - name: Install git-svn
