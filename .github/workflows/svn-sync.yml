@@ -18,6 +18,7 @@ jobs:
           repository: 'moos-ivp/svn-mirror'
           ssh-key: ${{ secrets.SVN_MIRROR_REPO_DEPLOY_KEY }}
           ref: 'master'
+          fetch-depth: '0'
       - name: Install git-svn
         run: |
           sudo apt-get update
