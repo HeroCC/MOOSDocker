@@ -38,8 +38,8 @@ jobs:
           #git config svn-remote.svn.tags 'releases/*:refs/remotes/origin/tags/*' 
       - name: Fetch new changes from SVN
         run: |
-          git svn info
           git svn fetch
+          git svn info
       - name: Push new commits to git
         run: |
           git svn rebase
