@@ -138,8 +138,11 @@ test-unit-tests:
         done
     - docker manifest create ${REPO_PATH}:${REVISION}${TAG_EXTRAS} ${IMAGES}
     - docker manifest push --purge ${REPO_PATH}:${REVISION}${TAG_EXTRAS}
-    - docker manifest create ${REPO_PATH}:trunk${TAG_EXTRAS} ${IMAGES}
-    - docker manifest push --purge ${REPO_PATH}:trunk${TAG_EXTRAS}
+    - > 
+        if [[ -z "$NO_TRUNK_LABEL" ]]; then
+          docker manifest create ${REPO_PATH}:trunk${TAG_EXTRAS} ${IMAGES}
+          docker manifest push --purge ${REPO_PATH}:trunk${TAG_EXTRAS}
+        fi
 
 deploy-gitlab-registry:
   extends: .deploy_generic_manifest
