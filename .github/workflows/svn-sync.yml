@@ -22,7 +22,7 @@ jobs:
       - name: Install git-svn
         run: |
           sudo apt-get update
-          sudo apt-get install -y git-svn
+          sudo apt-get install -y git git-svn
       - name: Cache .git/svn directory # speeds up indexing
         uses: actions/cache@v2
         with: 
