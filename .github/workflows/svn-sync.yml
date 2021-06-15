@@ -10,7 +10,8 @@ on:
 
 jobs:
   svn-mirror:
-    runs-on: ubuntu-20.04
+    container:
+      image: ubuntu:20.04
     steps:
       - name: Get git mirror repo
         uses: actions/checkout@v2
