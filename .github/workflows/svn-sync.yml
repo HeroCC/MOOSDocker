@@ -11,8 +11,6 @@ on:
 jobs:
   svn-mirror:
     runs-on: ubuntu-latest
-    container:
-      image: ubuntu:20.04
     steps:
       - name: Get git mirror repo
         uses: actions/checkout@v2
@@ -23,6 +21,8 @@ jobs:
           fetch-depth: '0'
       - name: Install git-svn
         run: |
+          # Workaround for https://github.com/actions/virtual-environments/issues/3586
+          sudo add-apt-repository ppa:git-core/ppa
           sudo apt-get update
           sudo apt-get install -y git git-svn
       - name: Cache .git/svn directory # speeds up indexing
