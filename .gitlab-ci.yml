@@ -48,7 +48,7 @@ build-ivp-amd64:
 
 build-ivp-arm64:
   stage: build
-  timeout: 3h
+  timeout: 4h
   extends: .build_generic
   variables:
     BUILD_ARCH: linux/arm64
@@ -56,7 +56,7 @@ build-ivp-arm64:
 
 build-ivp-armv7:
   stage: build
-  timeout: 3h
+  timeout: 4h
   extends: .build_generic
   variables:
     BUILD_ARCH: linux/arm/v7
