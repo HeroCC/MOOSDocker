@@ -15,7 +15,7 @@ stages:
   - deploy
 
 variables:
-  DOCKER_HOST: tcp://docker:2375/
+  DOCKER_TLS_CERTDIR: "/certs"
   DEPLOY_ARCHS: "amd64 armv7"
   INDEV_IMAGE_NAME: "${CI_REGISTRY_IMAGE}/indev:trunk_CI-${CI_PIPELINE_ID}"
 
