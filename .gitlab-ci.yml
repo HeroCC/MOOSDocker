@@ -16,7 +16,7 @@ stages:
 
 variables:
   DOCKER_HOST: tcp://docker:2375/
-  DEPLOY_ARCHS: "amd64 arm64 armv7"
+  DEPLOY_ARCHS: "amd64 armv7"
   INDEV_IMAGE_NAME: "${CI_REGISTRY_IMAGE}/indev:trunk_CI-${CI_PIPELINE_ID}"
 
 # Build
@@ -46,13 +46,13 @@ build-ivp-amd64:
     BUILD_ARCH: linux/amd64
     BUILD_ARCH_NICE: "amd64"
 
-build-ivp-arm64:
-  stage: build
-  timeout: 4h
-  extends: .build_generic
-  variables:
-    BUILD_ARCH: linux/arm64
-    BUILD_ARCH_NICE: "arm64"
+# build-ivp-arm64:
+#   stage: build
+#   timeout: 4h
+#   extends: .build_generic
+#   variables:
+#     BUILD_ARCH: linux/arm64
+#     BUILD_ARCH_NICE: "arm64"
 
 build-ivp-armv7:
   stage: build
@@ -74,13 +74,13 @@ build-ivp-amd64-gui:
   variables:
     TAG_EXTRAS: "-gui"
 
-build-ivp-arm64-gui:
-  stage: build-gui
-  extends: build-ivp-arm64
-  before_script:
-    - export BUILD_EXTRAS="$BUILD_EXTRAS --build-arg FROM=${INDEV_IMAGE_NAME}"
-  variables:
-    TAG_EXTRAS: "-gui"
+# build-ivp-arm64-gui:
+#   stage: build-gui
+#   extends: build-ivp-arm64
+#   before_script:
+#     - export BUILD_EXTRAS="$BUILD_EXTRAS --build-arg FROM=${INDEV_IMAGE_NAME}"
+#   variables:
+#     TAG_EXTRAS: "-gui"
 
 build-ivp-armv7-gui:
   stage: build-gui
