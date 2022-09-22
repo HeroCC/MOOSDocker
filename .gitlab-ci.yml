@@ -1,4 +1,4 @@
-image: docker:20.10
+image: jonoh/docker-buildx-qemu@sha256:4fc5868d90c146563dace436cb1b850c2bd8055ff2e7d9d53fb4a83a7dc2969e
 
 #workflow:
 #  rules:
@@ -15,8 +15,7 @@ stages:
   - deploy
 
 variables:
-  DOCKER_HOST: tcp://docker:2376/
-  DOCKER_TLS_CERTDIR: "/certs"
+  DOCKER_HOST: tcp://docker:2375/
   DEPLOY_ARCHS: "amd64 armv7"
   INDEV_IMAGE_NAME: "${CI_REGISTRY_IMAGE}/indev:trunk_CI-${CI_PIPELINE_ID}"
 
@@ -24,7 +23,6 @@ variables:
 .build_generic:
   retry: 2
   script:
-    - sudo apt-get install binfmt-support qemu-user-static
     - update-binfmts --enable
     - docker buildx create --use
     - docker buildx inspect --bootstrap
