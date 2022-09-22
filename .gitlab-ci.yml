@@ -1,4 +1,4 @@
-image: jonoh/docker-buildx-qemu@sha256:4fc5868d90c146563dace436cb1b850c2bd8055ff2e7d9d53fb4a83a7dc2969e
+image: jonoh/docker-buildx-qemu@sha256:58d628dbfd24d9b763f02dde091986093e952e85e927d0eef0274d2ae32cea6f
 
 #workflow:
 #  rules:
