@@ -23,6 +23,7 @@ variables:
 .build_generic:
   retry: 2
   script:
+    - docker info
     - update-binfmts --enable
     - docker buildx create --use
     - docker buildx inspect --bootstrap
