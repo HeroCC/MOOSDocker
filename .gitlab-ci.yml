@@ -53,6 +53,8 @@ build-ivp-arm64:
   stage: build
   timeout: 4h
   extends: .build_generic
+  tags:
+    - dedi
   variables:
     BUILD_ARCH: linux/arm64
     BUILD_ARCH_NICE: "arm64"
@@ -80,6 +82,8 @@ build-ivp-amd64-gui:
 build-ivp-arm64-gui:
   stage: build-gui
   extends: build-ivp-arm64
+  tags:
+    - dedi
   before_script:
     - export BUILD_EXTRAS="$BUILD_EXTRAS --build-arg FROM=${INDEV_IMAGE_NAME}"
   variables:
