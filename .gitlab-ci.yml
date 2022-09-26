@@ -1,4 +1,4 @@
-image: jonoh/docker-buildx-qemu@sha256:58d628dbfd24d9b763f02dde091986093e952e85e927d0eef0274d2ae32cea6f
+image: docker:20.10
 
 #workflow:
 #  rules:
@@ -16,15 +16,18 @@ stages:
 
 variables:
   DOCKER_TLS_CERTDIR: "/certs"
-  DEPLOY_ARCHS: "amd64 armv7"
+  DEPLOY_ARCHS: "amd64 arm64 armv7"
   INDEV_IMAGE_NAME: "${CI_REGISTRY_IMAGE}/indev:trunk_CI-${CI_PIPELINE_ID}"
+  CONTEXT_NAME: "gitlab-pipeline-${CI_PIPELINE_ID}"
 
 # Build
 .build_generic:
   retry: 2
   script:
-    - update-binfmts --enable
-    - docker buildx create --use
+    - docker info
+    - docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
+    - docker context create $CONTEXT_NAME || true
+    - docker buildx create --use $CONTEXT_NAME
     - docker buildx inspect --bootstrap
     - echo "$CI_REGISTRY_PASSWORD" | docker login -u $CI_REGISTRY_USER --password-stdin $CI_REGISTRY
     - export NEW_IMAGE_NAME="${INDEV_IMAGE_NAME}-${BUILD_ARCH_NICE}${TAG_EXTRAS}" && echo $NEW_IMAGE_NAME
@@ -46,13 +49,15 @@ build-ivp-amd64:
     BUILD_ARCH: linux/amd64
     BUILD_ARCH_NICE: "amd64"
 
-# build-ivp-arm64:
-#   stage: build
-#   timeout: 4h
-#   extends: .build_generic
-#   variables:
-#     BUILD_ARCH: linux/arm64
-#     BUILD_ARCH_NICE: "arm64"
+build-ivp-arm64:
+  stage: build
+  timeout: 4h
+  extends: .build_generic
+  tags:
+    - dedi
+  variables:
+    BUILD_ARCH: linux/arm64
+    BUILD_ARCH_NICE: "arm64"
 
 build-ivp-armv7:
   stage: build
@@ -74,13 +79,15 @@ build-ivp-amd64-gui:
   variables:
     TAG_EXTRAS: "-gui"
 
-# build-ivp-arm64-gui:
-#   stage: build-gui
-#   extends: build-ivp-arm64
-#   before_script:
-#     - export BUILD_EXTRAS="$BUILD_EXTRAS --build-arg FROM=${INDEV_IMAGE_NAME}"
-#   variables:
-#     TAG_EXTRAS: "-gui"
+build-ivp-arm64-gui:
+  stage: build-gui
+  extends: build-ivp-arm64
+  tags:
+    - dedi
+  before_script:
+    - export BUILD_EXTRAS="$BUILD_EXTRAS --build-arg FROM=${INDEV_IMAGE_NAME}"
+  variables:
+    TAG_EXTRAS: "-gui"
 
 build-ivp-armv7-gui:
   stage: build-gui
