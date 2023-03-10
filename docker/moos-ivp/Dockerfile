@@ -23,6 +23,9 @@ WORKDIR "/home/moos"
 # Build Arguments
 ARG SVN_REV=HEAD
 
+# UTF-8 Encoding
+ENV LC_CTYPE="C.UTF-8"
+
 # Check-out the MOOS-IvP trunk
 RUN svn co -r "$SVN_REV" https://oceanai.mit.edu/svn/moos-ivp-aro/trunk /home/moos/moos-ivp
 
