@@ -1,4 +1,4 @@
-image: docker:20.10
+image: docker:20.10.22
 
 #workflow:
 #  rules:
@@ -6,7 +6,7 @@ image: docker:20.10
 #      when: never
 
 services:
-  - name: docker:20.10-dind
+  - name: docker:20.10.22-dind
 
 stages:
   - build
@@ -134,6 +134,7 @@ test-unit-tests:
     - echo "Tag Extras -> ${TAG_EXTRAS}"
     - echo "$REGISTRY_PASSWD" | docker login --username $REGISTRY_USER --password-stdin $REGISTRY_URL
   script:
+    - docker version
     # TODO dynamically get matching tags via registry API
     - >
         for arch in $DEPLOY_ARCHS; do
